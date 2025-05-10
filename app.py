@@ -82,7 +82,7 @@ def number_game_agent(state: GameState) -> GameState:
                 state["_next"] = "menu"
                 st.session_state['number_game_counter'] = 0 #reset counter
             else:
-                st["_next"] = "start_number_game"
+                state["_next"] = "start_number_game"
     with col2:
         if st.button("No", key=f"number_game_no_{session_id}_{st.session_state['number_game_counter']}"):
             state["number_guess_max"] = mid
@@ -237,6 +237,7 @@ def main():
         st.session_state['word_game_id'] = 0
 
     builder = StateGraph(GameState)
+    builder.set_recursion_limit(100) # Increase recursion limit
 
     builder.add_node("menu", lambda state: tracker.track(game_selector_agent(state)))
     builder.add_node("start_number_game", lambda state: tracker.track(number_game_agent(state)))
