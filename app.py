@@ -1,3 +1,13 @@
+from typing import TypedDict, List, Optional
+
+# Define the GameState structure
+class GameState(TypedDict):
+    number_guess_min: int
+    number_guess_max: int
+    number_game_count: int
+    session_games: List[str]
+    _next: Optional[str]
+    number_game_rounds: int
 def number_game_agent(state: GameState) -> GameState:
     min_val = state["number_guess_min"]
     max_val = state["number_guess_max"]
