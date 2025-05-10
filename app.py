@@ -1,3 +1,22 @@
+from typing import Dict, Any
+
+# Define GameState as a dictionary with a flexible structure
+GameState = Dict[str, Any]
+
+# Sample default state initialization (optional, for demonstration)
+def initialize_game_state() -> GameState:
+    return {
+        "number_guess_min": 1,
+        "number_guess_max": 50,
+        "number_game_count": 0,
+        "word_game_count": 0,
+        "word_attempts": 0,
+        "possible_words": None,
+        "session_games": [],
+        "_next": "menu",
+        "target_word": "",
+    }
+
 def number_game_agent(state: GameState) -> GameState:
     min_val = state["number_guess_min"]
     max_val = state["number_guess_max"]
