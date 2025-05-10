@@ -4,16 +4,12 @@
       "PYTHON_VERSION": "3.9"
     }
   },
-  "functions": {
-    "api/app": {
-      "handler": "app.py",
-      "runtime": "python3.9"
-    }
-  },
+  "runtime": "python3.9",
+  "handler": "app.py",
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/api/app"
+      "dest": "/"
     }
   ]
 }
