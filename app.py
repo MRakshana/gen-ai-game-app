@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 # coding: utf-8
 
@@ -49,8 +48,7 @@ class ExecutionTracker:
 
 def game_selector_agent(state: GameState) -> GameState:
     st.header("Choose a Game")
-    game_choice = st.radio("Select a game:", ("Number Game", "Word Game"))
-
+    game_choice = st.radio("Select a game:", ("Number Game", "Word Game"), key="game_choice") # Added key
     if game_choice == "Number Game":
         state["current_game"] = "number"
         state["_next"] = "start_number_game"
@@ -69,7 +67,7 @@ def number_game_agent(state: GameState) -> GameState:
     st.write(f"Is your number greater than {mid}?")
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("Yes", key="number_game_yes"):  # Added unique key
+        if st.button("Yes", key=f"number_game_yes_{state['number_game_count']}"):
             state["number_guess_min"] = mid + 1
             if state["number_guess_min"] == state["number_guess_max"]:
                 st.write(f"Your number is {state['number_guess_min']}! I guessed it!")
@@ -81,7 +79,7 @@ def number_game_agent(state: GameState) -> GameState:
             else:
                 state["_next"] = "start_number_game"
     with col2:
-        if st.button("No", key="number_game_no"):    # Added unique key
+        if st.button("No", key=f"number_game_no_{state['number_game_count']}"):
             state["number_guess_max"] = mid
             if state["number_guess_min"] == state["number_guess_max"]:
                 st.write(f"Your number is {state['number_guess_min']}! I guessed it!")
@@ -108,12 +106,12 @@ def word_game_agent(state: GameState) -> GameState:
         st.write(question)
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("Yes", key=f"yes_{question_idx}"):
+            if st.button("Yes", key=f"yes_{question_idx}_{state['word_attempts']}"): # Added key
                 answer = "yes"
             else:
                 answer = None
         with col2:
-            if st.button("No", key=f"no_{question_idx}"):
+            if st.button("No", key=f"no_{question_idx}_{state['word_attempts']}"): # Added key
                 answer = "no"
             else:
                 answer = None
