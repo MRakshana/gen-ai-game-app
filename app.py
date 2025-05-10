@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 # coding: utf-8
 
@@ -68,7 +69,7 @@ def number_game_agent(state: GameState) -> GameState:
     st.write(f"Is your number greater than {mid}?")
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("Yes"):
+        if st.button("Yes", key="number_game_yes"):  # Added unique key
             state["number_guess_min"] = mid + 1
             if state["number_guess_min"] == state["number_guess_max"]:
                 st.write(f"Your number is {state['number_guess_min']}! I guessed it!")
@@ -80,7 +81,7 @@ def number_game_agent(state: GameState) -> GameState:
             else:
                 state["_next"] = "start_number_game"
     with col2:
-        if st.button("No"):
+        if st.button("No", key="number_game_no"):    # Added unique key
             state["number_guess_max"] = mid
             if state["number_guess_min"] == state["number_guess_max"]:
                 st.write(f"Your number is {state['number_guess_min']}! I guessed it!")
