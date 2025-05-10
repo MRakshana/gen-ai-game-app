@@ -29,7 +29,7 @@ CLUE_QUESTIONS = {
     "Is it a musical instrument?": lambda word: word == "guitar",
     "Is it edible?": lambda word: word in ["apple", "pizza"],
     "Does it have four legs?": lambda word: word in ["elephant", "tiger", "chair"],
-    "Can it fly?": lambda word == "rocket"
+    "Can it fly?": lambda word: word == "rocket"
 }
 
 class ExecutionTracker:
