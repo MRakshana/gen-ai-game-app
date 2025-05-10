@@ -63,7 +63,6 @@ if __name__ == "__main__":
 # In[12]:
 
 
-pip install networkx matplotlib
 
 
 # In[1]:
