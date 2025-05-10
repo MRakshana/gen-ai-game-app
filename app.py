@@ -69,7 +69,7 @@ def number_game_agent(state: GameState) -> GameState:
     session_id = st.session_state.get('session_id', 0)
     # number_game_id = st.session_state.get('number_game_id', 0)  # Unique ID for the current game - Removed from here
     with col1:
-        if st.button("Yes", key=f"number_game_yes_{session_id}_{state['number_game_count']}"): #changed key
+        if st.button("Yes", key=f"number_game_yes_{session_id}_{mid}"): #changed key
             state["number_guess_min"] = mid + 1
             if state["number_guess_min"] == state["number_guess_max"]:
                 st.write(f"Your number is {state['number_guess_min']}! I guessed it!")
@@ -81,7 +81,7 @@ def number_game_agent(state: GameState) -> GameState:
             else:
                 state["_next"] = "start_number_game"
     with col2:
-        if st.button("No", key=f"number_game_no_{session_id}_{state['number_game_count']}"): #changed key
+        if st.button("No", key=f"number_game_no_{session_id}_{mid}"): #changed key
             state["number_guess_max"] = mid
             if state["number_guess_min"] == state["number_guess_max"]:
                 st.write(f"Your number is {state['number_guess_min']}! I guessed it!")
