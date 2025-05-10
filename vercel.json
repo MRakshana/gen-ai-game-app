@@ -1,0 +1,14 @@
+{
+  "build": {
+    "env": {
+      "PYTHON_VERSION": "3.x"
+    }
+  },
+  "route": [
+    {
+      "src": "/(.*)",
+      "dest": "app.py"
+    }
+  ],
+  "entrypoint": "app.py"
+}
