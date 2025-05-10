@@ -48,7 +48,7 @@ class ExecutionTracker:
 
 def game_selector_agent(state: GameState) -> GameState:
     st.header("Choose a Game")
-    game_choice = st.radio("Select a game:", ("Number Game", "Word Game"), key="game_choice") # Added key
+    game_choice = st.radio("Select a game:", ("Number Game", "Word Game"), key="game_choice")
     if game_choice == "Number Game":
         state["current_game"] = "number"
         state["_next"] = "start_number_game"
@@ -66,8 +66,9 @@ def number_game_agent(state: GameState) -> GameState:
 
     st.write(f"Is your number greater than {mid}?")
     col1, col2 = st.columns(2)
+    session_id = st.session_state.get('session_id', 0) #get the session id, default 0
     with col1:
-        if st.button("Yes", key=f"number_game_yes_{state['number_game_count']}"):
+        if st.button("Yes", key=f"number_game_yes_{session_id}_{state['number_game_count']}"): # Added session_id
             state["number_guess_min"] = mid + 1
             if state["number_guess_min"] == state["number_guess_max"]:
                 st.write(f"Your number is {state['number_guess_min']}! I guessed it!")
@@ -79,7 +80,7 @@ def number_game_agent(state: GameState) -> GameState:
             else:
                 state["_next"] = "start_number_game"
     with col2:
-        if st.button("No", key=f"number_game_no_{state['number_game_count']}"):
+        if st.button("No", key=f"number_game_no_{session_id}_{state['number_game_count']}"): # Added session_id
             state["number_guess_max"] = mid
             if state["number_guess_min"] == state["number_guess_max"]:
                 st.write(f"Your number is {state['number_guess_min']}! I guessed it!")
@@ -105,13 +106,14 @@ def word_game_agent(state: GameState) -> GameState:
         question = questions[question_idx]
         st.write(question)
         col1, col2 = st.columns(2)
+        session_id = st.session_state.get('session_id', 0) #get the session id
         with col1:
-            if st.button("Yes", key=f"yes_{question_idx}_{state['word_attempts']}"): # Added key
+            if st.button("Yes", key=f"yes_{question_idx}_{session_id}_{state['word_attempts']}"): # Added session_id
                 answer = "yes"
             else:
                 answer = None
         with col2:
-            if st.button("No", key=f"no_{question_idx}_{state['word_attempts']}"): # Added key
+            if st.button("No", key=f"no_{question_idx}_{session_id}_{state['word_attempts']}"): # Added session_id
                 answer = "no"
             else:
                 answer = None
@@ -214,6 +216,9 @@ def main():
         "possible_words": None,
         "_next": "menu"
     }
+    if 'session_id' not in st.session_state:  #initialise the session id
+        st.session_state['session_id'] = 0
+    st.session_state['session_id'] += 1 #increment session id
 
     builder = StateGraph(GameState)
 
