@@ -66,9 +66,10 @@ def number_game_agent(state: GameState) -> GameState:
 
     st.write(f"Is your number greater than {mid}?")
     col1, col2 = st.columns(2)
-    session_id = st.session_state.get('session_id', 0) #get the session id, default 0
+    session_id = st.session_state.get('session_id', 0)
+    game_id = st.session_state.get('number_game_id', 0) # Add a game counter
     with col1:
-        if st.button("Yes", key=f"number_game_yes_{session_id}_{state['number_game_count']}"): # Added session_id
+        if st.button("Yes", key=f"number_game_yes_{session_id}_{game_id}"):
             state["number_guess_min"] = mid + 1
             if state["number_guess_min"] == state["number_guess_max"]:
                 st.write(f"Your number is {state['number_guess_min']}! I guessed it!")
@@ -80,7 +81,7 @@ def number_game_agent(state: GameState) -> GameState:
             else:
                 state["_next"] = "start_number_game"
     with col2:
-        if st.button("No", key=f"number_game_no_{session_id}_{state['number_game_count']}"): # Added session_id
+        if st.button("No", key=f"number_game_no_{session_id}_{game_id}"):
             state["number_guess_max"] = mid
             if state["number_guess_min"] == state["number_guess_max"]:
                 st.write(f"Your number is {state['number_guess_min']}! I guessed it!")
@@ -106,14 +107,15 @@ def word_game_agent(state: GameState) -> GameState:
         question = questions[question_idx]
         st.write(question)
         col1, col2 = st.columns(2)
-        session_id = st.session_state.get('session_id', 0) #get the session id
+        session_id = st.session_state.get('session_id', 0)
+        game_id = st.session_state.get('word_game_id', 0) # Add a game counter.
         with col1:
-            if st.button("Yes", key=f"yes_{question_idx}_{session_id}_{state['word_attempts']}"): # Added session_id
+            if st.button("Yes", key=f"yes_{question_idx}_{session_id}_{game_id}_{state['word_attempts']}"):
                 answer = "yes"
             else:
                 answer = None
         with col2:
-            if st.button("No", key=f"no_{question_idx}_{session_id}_{state['word_attempts']}"): # Added session_id
+            if st.button("No", key=f"no_{question_idx}_{session_id}_{game_id}_{state['word_attempts']}"):
                 answer = "no"
             else:
                 answer = None
@@ -216,9 +218,14 @@ def main():
         "possible_words": None,
         "_next": "menu"
     }
-    if 'session_id' not in st.session_state:  #initialise the session id
+    if 'session_id' not in st.session_state:
         st.session_state['session_id'] = 0
-    st.session_state['session_id'] += 1 #increment session id
+    st.session_state['session_id'] += 1
+
+    if 'number_game_id' not in st.session_state: # Initialize number game id
+        st.session_state['number_game_id'] = 0
+    if 'word_game_id' not in st.session_state: # Initialize word game id
+        st.session_state['word_game_id'] = 0
 
     builder = StateGraph(GameState)
 
@@ -241,6 +248,8 @@ def main():
     visualize_execution(tracker.steps)
 
     print_game_state(final_state)
+    st.session_state['number_game_id'] += 1 # Increment
+    st.session_state['word_game_id'] += 1 # Increment
 
 if __name__ == "__main__":
     # Check if running in a Streamlit environment (no DISPLAY variable)
