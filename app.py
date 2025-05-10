@@ -1,66 +1,3 @@
-from uuid import uuid4
-from langgraph.graph import StateGraph, END
-from typing import TypedDict, List, Optional
-from graphviz import Digraph
-import streamlit as st
-from PIL import Image
-import os
-
-# Define GameState as a TypedDict
-class GameState(TypedDict):
-    current_game: Optional[str]
-    number_guess_min: int
-    number_guess_max: int
-    number_game_count: int
-    word_game_count: int
-    session_games: List[str]
-    word_attempts: int
-    target_word: Optional[str]
-    possible_words: List[str]
-    _next: str
-
-# Word list and clue questions
-WORD_LIST = ["apple", "chair", "elephant", "guitar", "rocket", "pencil", "pizza", "tiger"]
-CLUE_QUESTIONS = {
-    "Is it a living thing?": lambda word: word in ["apple", "elephant", "tiger"],
-    "Is it an animal?": lambda word: word in ["elephant", "tiger"],
-    "Is it an object?": lambda word: word not in ["elephant", "tiger", "apple"],
-    "Is it used in school?": lambda word: word in ["chair", "pencil"],
-    "Is it a musical instrument?": lambda word: word == "guitar",
-    "Is it edible?": lambda word: word in ["apple", "pizza"],
-    "Does it have four legs?": lambda word: word in ["elephant", "tiger", "chair"],
-    "Can it fly?": lambda word: word == "rocket"
-}
-
-# Execution Tracker for step-by-step tracing
-class ExecutionTracker:
-    def __init__(self):
-        self.steps = []
-        self.current_state = None
-
-    def track(self, state):
-        self.current_state = state.get("_next", END)
-        self.steps.append({
-            "node": self.current_state,
-            "game": state.get("current_game"),
-            "action": f"Game: {state.get('current_game')}" if state.get("current_game") else "Menu"
-        })
-        return state
-
-# Game agents for number and word games
-def game_selector_agent(state: GameState) -> GameState:
-    st.header("Choose a Game")
-    game_choice = st.radio("Select a game:", ("Number Game", "Word Game"), key="game_choice")
-    if game_choice == "Number Game":
-        state["current_game"] = "number"
-        state["_next"] = "start_number_game"
-    elif game_choice == "Word Game":
-        state["current_game"] = "word"
-        state["_next"] = "start_word_game"
-    else:
-        state["_next"] = END
-    return state
-
 def number_game_agent(state: GameState) -> GameState:
     min_val = state["number_guess_min"]
     max_val = state["number_guess_max"]
@@ -70,7 +7,7 @@ def number_game_agent(state: GameState) -> GameState:
     col1, col2 = st.columns(2)
     session_id = st.session_state.get('session_id', 0)
     with col1:
-        if st.button("Yes", key=f"number_game_yes_{session_id}_{state['number_game_count']}"):
+        if st.button(f"Yes_{session_id}_{state['number_game_count']}", key=f"number_game_yes_{session_id}_{state['number_game_count']}"):
             state["number_guess_min"] = mid + 1
             if state["number_guess_min"] == state["number_guess_max"]:
                 st.write(f"Your number is {state['number_guess_min']}! I guessed it!")
@@ -82,7 +19,7 @@ def number_game_agent(state: GameState) -> GameState:
             else:
                 state["_next"] = "start_number_game"
     with col2:
-        if st.button("No", key=f"number_game_no_{session_id}_{state['number_game_count']}"):
+        if st.button(f"No_{session_id}_{state['number_game_count']}", key=f"number_game_no_{session_id}_{state['number_game_count']}"):
             state["number_guess_max"] = mid
             if state["number_guess_min"] == state["number_guess_max"]:
                 st.write(f"Your number is {state['number_guess_min']}! I guessed it!")
@@ -110,12 +47,12 @@ def word_game_agent(state: GameState) -> GameState:
         col1, col2 = st.columns(2)
         session_id = st.session_state.get('session_id', 0)
         with col1:
-            if st.button("Yes", key=f"yes_{question_idx}_{session_id}_{state['word_game_count']}_{state['word_attempts']}"):
+            if st.button(f"Yes_{question_idx}_{session_id}_{state['word_game_count']}_{state['word_attempts']}", key=f"yes_{question_idx}_{session_id}_{state['word_game_count']}_{state['word_attempts']}"):
                 answer = "yes"
             else:
                 answer = None
         with col2:
-            if st.button("No", key=f"no_{question_idx}_{session_id}_{state['word_game_count']}_{state['word_attempts']}"):
+            if st.button(f"No_{question_idx}_{session_id}_{state['word_game_count']}_{state['word_attempts']}", key=f"no_{question_idx}_{session_id}_{state['word_game_count']}_{state['word_attempts']}"):
                 answer = "no"
             else:
                 answer = None
@@ -140,7 +77,7 @@ def word_game_agent(state: GameState) -> GameState:
             if len(filtered_words) == 1:
                 guess = filtered_words[0]
                 st.write(f"\nI think your word is: **{guess}**")
-                correct = st.radio("Am I right?", ("Yes", "No"), key="correct_guess")
+                correct = st.radio("Am I right?", ("Yes", "No"), key=f"correct_guess_{session_id}")
 
                 if correct == "Yes":
                     st.write("Yay! I guessed your word!")
@@ -171,7 +108,7 @@ def word_game_agent(state: GameState) -> GameState:
                 st.write("I couldn't guess the word.")
                 guess = ""
 
-            correct = st.radio("Am I right?", ("Yes", "No"), key="final_guess")
+            correct = st.radio(f"Am I right?_{session_id}", ("Yes", "No"), key=f"final_guess_{session_id}")
             if correct == "Yes":
                 st.write("Yay! I guessed your word!")
                 state["word_game_count"] += 1
@@ -186,64 +123,3 @@ def word_game_agent(state: GameState) -> GameState:
                 state["_next"] = "menu"
 
     return state
-
-def router(state: GameState) -> str:
-    return state.get("_next", END)
-
-def visualize_structure():
-    st.header("Game State Machine Structure")
-    st.write("Graph visualization is not available in this deployed version.")
-
-def visualize_execution(execution_steps):
-    st.header("Execution Trace")
-    st.write("Execution trace visualization is not available in this deployed version.")
-
-def print_game_state(state: GameState):
-    st.write("\nFinal Game State:")
-    for key, value in state.items():
-        st.write(f"{key}: {value}")
-
-def main():
-    tracker = ExecutionTracker()
-
-    initial_state: GameState = {
-        "current_game": None,
-        "number_guess_min": 1,
-        "number_guess_max": 50,
-        "number_game_count": 0,
-        "word_game_count": 0,
-        "session_games": [],
-        "word_attempts": 0,
-        "target_word": None,
-        "possible_words": None,
-        "_next": "menu"
-    }
-    if 'session_id' not in st.session_state:
-        st.session_state['session_id'] = 0
-    st.session_state['session_id'] += 1
-
-    builder = StateGraph(GameState)
-
-    builder.add_node("menu", lambda state: tracker.track(game_selector_agent(state)))
-    builder.add_node("start_number_game", lambda state: tracker.track(number_game_agent(state)))
-    builder.add_node("start_word_game", lambda state: tracker.track(word_game_agent(state)))
-
-    builder.set_entry_point("menu")
-
-    builder.add_conditional_edges("menu", router)
-    builder.add_conditional_edges("start_number_game", router)
-    builder.add_conditional_edges("start_word_game", router)
-
-    app = builder.compile()
-
-    visualize_structure()
-
-    st.write("\nStarting game... Follow the prompts to play.")
-    final_state = app.invoke(initial_state)
-    visualize_execution(tracker.steps)
-
-    print_game_state(final_state)
-
-if __name__ == "__main__":
-    if "DISPLAY" not in os.environ:
-        main()
