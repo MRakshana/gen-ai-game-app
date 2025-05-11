@@ -1,6 +1,6 @@
 import streamlit as st
 from langgraph.graph import StateGraph, END
-from typing import TypedDict, Literal
+from typing import TypedDict
 
 # Define GameState TypedDict
 class GameState(TypedDict):
@@ -13,6 +13,7 @@ class GameState(TypedDict):
 
 # Initialize the state with default values
 def initialize_state():
+    print("🔧 initialize_state is defined")
     return GameState(
         _next="menu",
         number_guess_min=1,
@@ -124,19 +125,16 @@ def main():
 
     game_graph = create_game_graph()
 
-    # Check if game_graph is actually a StateGraph object
     print("Game graph type:", type(game_graph))
-    
-    # Now attempt to stream if it is the correct type
+
     if isinstance(game_graph, StateGraph):
-        for updated_state in game_graph.stream(
-            st.session_state.game_state
-        ):
+        for updated_state in game_graph.stream(st.session_state.game_state):
             st.session_state.game_state = updated_state
             if updated_state["_next"] == "menu":
                 break
     else:
         st.error("Failed to create a valid game graph.")
 
+# Run the app
 if __name__ == "__main__":
     main()
