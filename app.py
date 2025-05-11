@@ -1,9 +1,9 @@
-from typing import Annotated, TypedDict
-from langgraph.graph import StateGraph, END, Multiple
+from typing import TypedDict
+from langgraph.graph import StateGraph, END
 
 # 1. Define the state schema
 class GameState(TypedDict):
-    _next: Annotated[list[str], Multiple()]  # Allows multiple transitions
+    _next: list[str]  # No need for Multiple annotation
     value: int
 
 # 2. Define your node functions
@@ -60,5 +60,5 @@ graph = builder.compile()
 
 # 4. Invoke the graph
 print("Running LangGraph...\n")
-initial_state = {"_next": ["start"], "value": 3}  # try different numbers!
+initial_state = {"_next": ["start"], "value": 3}  # Try different numbers!
 graph.invoke(initial_state)
