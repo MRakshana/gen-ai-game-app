@@ -2,7 +2,9 @@ import streamlit as st
 from langgraph.graph import StateGraph, END
 from typing import TypedDict
 
+# ----------------------------
 # Define GameState TypedDict
+# ----------------------------
 class GameState(TypedDict):
     _next: str
     number_guess_min: int
@@ -11,9 +13,10 @@ class GameState(TypedDict):
     word_game_count: int
     session_games: list[str]
 
-# Initialize the state with default values
-def initialize_state():
-    print("🔧 initialize_state is defined")
+# ----------------------------
+# Initialize the game state
+# ----------------------------
+def initialize_state() -> GameState:
     return GameState(
         _next="menu",
         number_guess_min=1,
@@ -23,7 +26,9 @@ def initialize_state():
         session_games=[],
     )
 
-# Define menu agent
+# ----------------------------
+# Menu Agent
+# ----------------------------
 def menu(state: GameState) -> GameState:
     st.title("🧠 Gen AI Game App")
     st.subheader("Choose a game")
@@ -38,7 +43,9 @@ def menu(state: GameState) -> GameState:
 
     return state
 
-# Define number guessing game agent
+# ----------------------------
+# Number Guessing Game Agent
+# ----------------------------
 def number_game_agent(state: GameState) -> GameState:
     min_val = state["number_guess_min"]
     max_val = state["number_guess_max"]
@@ -75,23 +82,17 @@ def number_game_agent(state: GameState) -> GameState:
         state["_next"] = "start_number_game"
         return state
 
-    if state["number_guess_min"] >= state["number_guess_max"]:
-        st.success(f"🎯 Your number is {state['number_guess_min']}! I guessed it!")
-        state["number_game_count"] += 1
-        state["session_games"].append("number")
-        state["number_guess_min"] = 1
-        state["number_guess_max"] = 50
-        state["_next"] = "menu"
-    else:
-        state["_next"] = "start_number_game"
-
+    state["_next"] = "start_number_game"
     return state
 
-# Define word clue guessing game agent
+# ----------------------------
+# Word Clue Guessing Game Agent
+# ----------------------------
 def word_game_agent(state: GameState) -> GameState:
     st.write("Word Game Agent")
     st.write("Clue: It's a large animal with a trunk.")
     answer = st.text_input("Your Guess:", key="word_game_input")
+
     if answer.lower() == "elephant":
         st.success("Correct! 🎉")
         state["word_game_count"] += 1
@@ -100,41 +101,43 @@ def word_game_agent(state: GameState) -> GameState:
     else:
         st.warning("Try again!")
         state["_next"] = "start_word_game"
+
     return state
 
-# Create the game graph with nodes and edges
+# ----------------------------
+# Build the Game Graph
+# ----------------------------
 def create_game_graph():
     builder = StateGraph(GameState)
     builder.add_node("menu", menu)
     builder.add_node("start_number_game", number_game_agent)
     builder.add_node("start_word_game", word_game_agent)
+
     builder.set_entry_point("menu")
+    builder.set_finish_point("menu")
+
     builder.add_edge("menu", "start_number_game")
     builder.add_edge("menu", "start_word_game")
     builder.add_edge("start_number_game", "start_number_game")
     builder.add_edge("start_number_game", "menu")
-    builder.add_edge("start_word_game", "menu")
     builder.add_edge("start_word_game", "start_word_game")
-    builder.set_finish_point("menu")
+    builder.add_edge("start_word_game", "menu")
+
     return builder.compile()
 
-# Main function to control the app flow
+# ----------------------------
+# Main Application
+# ----------------------------
 def main():
     if "game_state" not in st.session_state:
         st.session_state.game_state = initialize_state()
 
     game_graph = create_game_graph()
 
-    print("Game graph type:", type(game_graph))
+    for updated_state in game_graph.stream(st.session_state.game_state):
+        st.session_state.game_state = updated_state
+        if updated_state["_next"] == "menu":
+            break
 
-    if isinstance(game_graph, StateGraph):
-        for updated_state in game_graph.stream(st.session_state.game_state):
-            st.session_state.game_state = updated_state
-            if updated_state["_next"] == "menu":
-                break
-    else:
-        st.error("Failed to create a valid game graph.")
-
-# Run the app
 if __name__ == "__main__":
     main()
