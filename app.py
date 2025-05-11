@@ -1,10 +1,11 @@
 import streamlit as st
 from langgraph.graph import StateGraph
 from typing import TypedDict
+from typing_extensions import Annotated
 
-# Define GameState TypedDict
+# Define GameState TypedDict with Annotated to allow multiple next steps
 class GameState(TypedDict):
-    _next: str
+    _next: Annotated[str, "multiple"]  # Allow multiple next steps here
     number_guess_min: int
     number_guess_max: int
     number_game_count: int
