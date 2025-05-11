@@ -1,5 +1,5 @@
 import streamlit as st
-from langgraph import StateGraph
+from langgraph.graph import StateGraph
 from typing import TypedDict
 
 # Define GameState TypedDict
