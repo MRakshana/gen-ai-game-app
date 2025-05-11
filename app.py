@@ -63,4 +63,62 @@ def number_game_agent(state: GameState) -> GameState:
     if state["number_guess_min"] >= state["number_guess_max"]:
         st.success(f"🎯 Your number is {state['number_guess_min']}! I guessed it!")
         state["number_game_count"] += 1
-        state["session_games"]._]()
+        state["session_games"].append("number")
+        state["number_guess_min"] = 1
+        state["number_guess_max"] = 50
+        state["_next"] = "menu"
+    else:
+        state["_next"] = "start_number_game"
+
+    return state
+
+# Word guessing game agent
+def word_game_agent(state: GameState) -> GameState:
+    st.subheader("🧩 Word Clue Game")
+    st.write("Clue: It's a large animal with a trunk.")
+    answer = st.text_input("Your Guess:", key="word_game_input")
+
+    if answer:
+        if answer.lower() == "elephant":
+            st.success("Correct! 🎉")
+            state["word_game_count"] += 1
+            state["session_games"].append("word")
+            state["_next"] = "menu"
+        else:
+            st.warning("Try again!")
+            state["_next"] = "start_word_game"
+    else:
+        state["_next"] = "start_word_game"
+
+    return state
+
+# Graph creation
+def create_game_graph():
+    builder = StateGraph(GameState)
+    builder.add_node("menu", menu)
+    builder.add_node("start_number_game", number_game_agent)
+    builder.add_node("start_word_game", word_game_agent)
+    builder.set_entry_point("menu")
+    builder.add_edge("menu", "start_number_game")
+    builder.add_edge("menu", "start_word_game")
+    builder.add_edge("start_number_game", "start_number_game")
+    builder.add_edge("start_number_game", "menu")
+    builder.add_edge("start_word_game", "start_word_game")
+    builder.add_edge("start_word_game", "menu")
+    builder.set_finish_point("menu")
+    return builder.compile()
+
+# Main function
+def main():
+    if "game_state" not in st.session_state:
+        st.session_state.game_state = initialize_state()
+
+    game_graph = create_game_graph()
+
+    for updated_state in game_graph.stream(st.session_state.game_state):
+        st.session_state.game_state = updated_state
+        if updated_state.get("_next") == "menu":
+            break
+
+if __name__ == "__main__":
+    main()
