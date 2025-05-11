@@ -5,6 +5,8 @@ from typing import TypedDict, Literal
 # Define GameState TypedDict
 class GameState(TypedDict):
     _next: str
+    _next_number_game: str
+    _next_word_game: str
     number_guess_min: int
     number_guess_max: int
     number_game_count: int
@@ -15,6 +17,8 @@ class GameState(TypedDict):
 def initialize_state() -> GameState:
     return {
         "_next": "menu",
+        "_next_number_game": "start_number_game",
+        "_next_word_game": "start_word_game",
         "number_guess_min": 1,
         "number_guess_max": 50,
         "number_game_count": 0,
@@ -28,16 +32,17 @@ def menu(state: GameState) -> GameState:
     st.subheader("Choose a game")
     col1, col2 = st.columns(2)
 
-    if col1.button("Play Number Guessing Game") and state["_next"] != "start_number_game":
-        state["_next"] = "start_number_game"
-    elif col2.button("Play Word Clue Game") and state["_next"] != "start_word_game":
-        state["_next"] = "start_word_game"
+    if col1.button("Play Number Guessing Game") and state["_next_number_game"] != "start_number_game":
+        state["_next_number_game"] = "start_number_game"
+    elif col2.button("Play Word Clue Game") and state["_next_word_game"] != "start_word_game":
+        state["_next_word_game"] = "start_word_game"
     
+    state["_next"] = "menu"  # Menu always leads back to itself
     return state
 
 # Number guessing game agent
 def number_game_agent(state: GameState) -> GameState:
-    if state["_next"] != "start_number_game":
+    if state["_next_number_game"] != "start_number_game":
         return state
     
     min_val = state.get("number_guess_min", 1)
@@ -67,15 +72,15 @@ def number_game_agent(state: GameState) -> GameState:
         state["session_games"].append("number")
         state["number_guess_min"] = 1
         state["number_guess_max"] = 50
-        state["_next"] = "menu"
+        state["_next_number_game"] = "menu"  # End the number game
     else:
-        state["_next"] = "start_number_game"
+        state["_next_number_game"] = "start_number_game"
 
     return state
 
 # Word guessing game agent
 def word_game_agent(state: GameState) -> GameState:
-    if state["_next"] != "start_word_game":
+    if state["_next_word_game"] != "start_word_game":
         return state
     
     st.subheader("🧩 Word Clue Game")
@@ -87,12 +92,12 @@ def word_game_agent(state: GameState) -> GameState:
             st.success("Correct! 🎉")
             state["word_game_count"] += 1
             state["session_games"].append("word")
-            state["_next"] = "menu"
+            state["_next_word_game"] = "menu"  # End the word game
         else:
             st.warning("Try again!")
-            state["_next"] = "start_word_game"
+            state["_next_word_game"] = "start_word_game"
     else:
-        state["_next"] = "start_word_game"
+        state["_next_word_game"] = "start_word_game"
 
     return state
 
