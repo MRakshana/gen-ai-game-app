@@ -18,12 +18,12 @@ def number_game():
     attempts = 0
     guessed_number = None
     
-    while guessed_number != "correct":
+    while guessed_number != "correct" and low <= high:
         # Guessing number based on binary search
         guess = (low + high) // 2
         attempts += 1
         guessed_number = st.radio(f"Is your number {guess}?", ["greater", "less", "correct"])
-        
+
         if guessed_number == "greater":
             low = guess + 1
         elif guessed_number == "less":
@@ -45,23 +45,32 @@ def word_clue_guesser():
     questions_asked = 0
     max_questions = 5
     correct_guess = False
+    user_input = ""
 
     # Ask descriptive yes/no/maybe questions
     while questions_asked < max_questions and not correct_guess:
         question = f"Is it a {random.choice(['fruit', 'object', 'animal', 'food', 'vehicle'])}?"
-        answer = st.radio(question, ["Yes", "No", "Maybe"])
+        answer = st.radio(question, ["Yes", "No", "Maybe"], key=f"question_{questions_asked}")
 
-        # If the user answers Yes or Maybe, make a guess
-        if answer in ["Yes", "Maybe"]:
-            guess = word_to_guess  # This is a simple logic; you can enhance this with more sophisticated question handling
-            correct_guess = (guess.lower() == word_to_guess.lower())
+        if answer == "Yes":
+            user_input = "Yes"
+        elif answer == "Maybe":
+            user_input = "Maybe"
         else:
-            questions_asked += 1
+            user_input = "No"
+        
+        # After asking questions, try to guess the word
+        if questions_asked == max_questions - 1:
+            guess = word_to_guess  # This is simple for now, can be improved
+            correct_guess = (guess.lower() == word_to_guess.lower())
+            break
+
+        questions_asked += 1
 
     if correct_guess:
         st.write(f"Success! I guessed the word: {word_to_guess}.")
     else:
-        retry = st.radio("I couldn't guess the word. Would you like to try again?", ["Yes", "No"])
+        retry = st.radio("I couldn't guess the word. Would you like to try again?", ["Yes", "No"], key="retry")
         if retry == "Yes":
             word_clue_guesser()
         else:
@@ -86,3 +95,5 @@ def main_menu():
 # Display the Main Menu
 st.title("Welcome to the Game Hub")
 main_menu()
+
+ 
