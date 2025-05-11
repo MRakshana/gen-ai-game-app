@@ -26,7 +26,7 @@ CLUE_QUESTIONS = {
     "Is it an animal?": lambda word: word in ["elephant", "tiger"],
     "Is it an object?": lambda word: word not in ["elephant", "tiger", "apple"],
     "Is it used in school?": lambda word: word in ["chair", "pencil"],
-    "Is it a musical instrument?": lambda word == "guitar",
+    "Is it a musical instrument?": lambda word: word == "guitar",
     "Is it edible?": lambda word in ["apple", "pizza"],
     "Does it have four legs?": lambda word in ["elephant", "tiger", "chair"],
     "Can it fly?": lambda word == "rocket"
