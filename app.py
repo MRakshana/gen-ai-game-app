@@ -195,7 +195,10 @@ def word_game_agent(state: GameState) -> GameState:
     return state
 
 def router(state: GameState) -> str:
-    return state.get("_next", END)
+    # print(f"Current state: {state}")  # Debug: Print the current state
+    next_state = state.get("_next", END)
+    # print(f"Next state: {next_state}")  # Debug: Print the next state
+    return next_state
 
 def visualize_structure():
     st.header("Game State Machine Structure")
