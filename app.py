@@ -22,7 +22,7 @@ def number_game():
         # Guessing number based on binary search
         guess = (low + high) // 2
         attempts += 1
-        guessed_number = st.radio(f"Is your number {guess}?", ["greater", "less", "correct"])
+        guessed_number = st.radio(f"Is your number {guess}?", ["greater", "less", "correct"], key=f"number_game_{attempts}")
 
         if guessed_number == "greater":
             low = guess + 1
@@ -50,7 +50,7 @@ def word_clue_guesser():
     # Ask descriptive yes/no/maybe questions
     while questions_asked < max_questions and not correct_guess:
         question = f"Is it a {random.choice(['fruit', 'object', 'animal', 'food', 'vehicle'])}?"
-        answer = st.radio(question, ["Yes", "No", "Maybe"], key=f"question_{questions_asked}")
+        answer = st.radio(question, ["Yes", "No", "Maybe"], key=f"word_game_question_{questions_asked}")
 
         if answer == "Yes":
             user_input = "Yes"
@@ -82,18 +82,16 @@ def word_clue_guesser():
 
 # Main Menu UI
 def main_menu():
-    game_mode = st.radio("Choose a game mode", ["Number Game", "Word Clue Guesser"])
+    game_mode = st.radio("Choose a game mode", ["Number Game", "Word Clue Guesser"], key="game_mode")
 
     if game_mode == "Number Game":
-        if st.button("Start Number Game"):
+        if st.button("Start Number Game", key="start_number_game"):
             number_game()
 
     elif game_mode == "Word Clue Guesser":
-        if st.button("Start Word Clue Guesser"):
+        if st.button("Start Word Clue Guesser", key="start_word_game"):
             word_clue_guesser()
 
 # Display the Main Menu
 st.title("Welcome to the Game Hub")
 main_menu()
-
- 
