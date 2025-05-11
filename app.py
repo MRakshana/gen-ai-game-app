@@ -3,9 +3,9 @@ from langgraph.graph import StateGraph
 from typing import TypedDict
 from typing_extensions import Annotated
 
-# Define GameState TypedDict with Annotated to handle multiple values for '_next'
+# Define GameState TypedDict with Annotated for single-value '_next'
 class GameState(TypedDict):
-    _next: Annotated[str, "next_step"]  # Define '_next' as a single value key for each step
+    _next: Annotated[str, "next_step"]  # Only one value allowed for '_next'
     number_guess_min: int
     number_guess_max: int
     number_game_count: int
@@ -15,7 +15,7 @@ class GameState(TypedDict):
 # Initialize the state with default values
 def initialize_state() -> GameState:
     return {
-        "_next": "menu",  # Direct string value instead of Annotated
+        "_next": "menu",  # Start the flow at 'menu'
         "number_guess_min": 1,
         "number_guess_max": 50,
         "number_game_count": 0,
@@ -30,9 +30,9 @@ def menu(state: GameState) -> GameState:
     col1, col2 = st.columns(2)
 
     if col1.button("Play Number Guessing Game"):
-        state["_next"] = "start_number_game"
+        state["_next"] = "start_number_game"  # Transition to number game
     elif col2.button("Play Word Clue Game"):
-        state["_next"] = "start_word_game"
+        state["_next"] = "start_word_game"  # Transition to word game
 
     return state
 
@@ -65,9 +65,9 @@ def number_game_agent(state: GameState) -> GameState:
         state["session_games"].append("number")
         state["number_guess_min"] = 1
         state["number_guess_max"] = 50
-        state["_next"] = "menu"
+        state["_next"] = "menu"  # Return to menu after game ends
     else:
-        state["_next"] = "start_number_game"
+        state["_next"] = "start_number_game"  # Continue number guessing game
 
     return state
 
@@ -82,16 +82,16 @@ def word_game_agent(state: GameState) -> GameState:
             st.success("Correct! 🎉")
             state["word_game_count"] += 1
             state["session_games"].append("word")
-            state["_next"] = "menu"
+            state["_next"] = "menu"  # Return to menu after correct answer
         else:
             st.warning("Try again!")
-            state["_next"] = "start_word_game"
+            state["_next"] = "start_word_game"  # Continue word guessing game
     else:
-        state["_next"] = "start_word_game"
+        state["_next"] = "start_word_game"  # Wait for user input
 
     return state
 
-# Graph creation with explicit next-step handling
+# Graph creation with proper state transitions and single `_next` values
 def create_game_graph():
     builder = StateGraph(GameState)
     builder.add_node("menu", menu)
@@ -114,10 +114,10 @@ def main():
 
     game_graph = create_game_graph()
 
-    # Process the game flow
+    # Process the game flow and ensure single-state transitions
     for updated_state in game_graph.stream(st.session_state.game_state):
         st.session_state.game_state = updated_state
-        # We ensure the state only returns to "menu" once we are done with the game
+        # Once we are done with a game, the state should return to 'menu'
         if updated_state.get("_next") == "menu":
             break
 
