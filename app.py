@@ -52,14 +52,18 @@ def game_selector_agent(state: GameState) -> GameState:
     if game_choice == "Number Game":
         state["current_game"] = "number"
         state["_next"] = "start_number_game"
+        st.write("Game Selector: Number Game Selected")  # Debug
     elif game_choice == "Word Game":
         state["current_game"] = "word"
         state["_next"] = "start_word_game"
+        st.write("Game Selector: Word Game Selected")  # Debug
     else:
         state["_next"] = END
+        st.write("Game Selector: END Selected")  # Debug
     return state
 
 def number_game_agent(state: GameState) -> GameState:
+    st.write("Number Game Agent")  # Debug
     min_val = state["number_guess_min"]
     max_val = state["number_guess_max"]
     mid = (min_val + max_val) // 2
@@ -78,10 +82,12 @@ def number_game_agent(state: GameState) -> GameState:
                 state["session_games"].append("number")
                 state["number_guess_min"] = 1
                 state["number_guess_max"] = 50
-                state["_next"] = "menu"
+                state["_next"] = "menu"  # Explicitly set next state
                 st.session_state['number_game_counter'] = 0
             else:
                 state["_next"] = "start_number_game"
+        else:
+            state["_next"] = "start_number_game" # added else
     with col2:
         if st.button("No", key=f"number_game_no_{session_id}_{st.session_state['number_game_counter']}"):
             state["number_guess_max"] = mid
@@ -91,14 +97,17 @@ def number_game_agent(state: GameState) -> GameState:
                 state["session_games"].append("number")
                 state["number_guess_min"] = 1
                 state["number_guess_max"] = 50
-                state["_next"] = "menu"
+                state["_next"] = "menu"  # Explicitly set next state
                 st.session_state['number_game_counter'] = 0
             else:
                 state["_next"] = "start_number_game"
+        else:
+             state["_next"] = "start_number_game" # added else
     st.session_state['number_game_counter'] += 1
     return state
 
 def word_game_agent(state: GameState) -> GameState:
+    st.write("Word Game Agent")  # Debug
     if "possible_words" not in state or state["possible_words"] is None:
         state["possible_words"] = WORD_LIST.copy()
         state["target_word"] = st.text_input("Enter your secret word (for testing purposes):", key="target_word_input")
@@ -152,7 +161,7 @@ def word_game_agent(state: GameState) -> GameState:
                     state["word_game_count"] += 1
                     state["session_games"].append("word")
                     state["possible_words"] = None
-                    state["_next"] = "menu"
+                    state["_next"] = "menu"  # Explicitly set next state
                     st.session_state['word_game_counter'] = 0
                 elif correct == "No":
                     st.write("Hmm, let me try again.")
@@ -183,22 +192,26 @@ def word_game_agent(state: GameState) -> GameState:
                 state["word_game_count"] += 1
                 state["session_games"].append("word")
                 state["possible_words"] = None
-                state["_next"] = "menu"
+                state["_next"] = "menu"  # Explicitly set next state
                 st.session_state['word_game_counter'] = 0
             elif correct == "No":
                 st.write(f"Oops! The correct word was: **{state['target_word']}**")
                 state["word_count"] += 1
                 state["session_games"].append("word")
                 state["possible_words"] = None
-                state["_next"] = "menu"
+                state["_next"] = "menu" # Explicit
+    else:
+        state["_next"] = "menu" # add this
     st.session_state['word_game_counter'] += 1
     return state
 
 def router(state: GameState) -> str:
-    # print(f"Current state: {state}")  # Debug: Print the current state
+    print(f"Current state: {state}")  # Debug: Print the current state
     next_state = state.get("_next", END)
-    # print(f"Next state: {next_state}")  # Debug: Print the next state
+    print(f"Next state: {next_state}")  # Debug: Print the next state
     return next_state
+
+
 
 def visualize_structure():
     st.header("Game State Machine Structure")
