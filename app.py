@@ -72,7 +72,7 @@ def number_game_agent(state: GameState) -> GameState:
     with col1:
         if st.button("Yes", key=f"number_game_yes_{session_id}_{st.session_state['number_game_counter']}"):
             state["number_guess_min"] = mid + 1
-            if state["number_guess_min"] >= state["number_guess_max"]: # Changed to >= to handle edge case
+            if state["number_guess_min"] >= state["number_guess_max"]:
                 st.write(f"Your number is {state['number_guess_min']}! I guessed it!")
                 state["number_game_count"] += 1
                 state["session_games"].append("number")
@@ -85,7 +85,7 @@ def number_game_agent(state: GameState) -> GameState:
     with col2:
         if st.button("No", key=f"number_game_no_{session_id}_{st.session_state['number_game_counter']}"):
             state["number_guess_max"] = mid
-            if state["number_guess_min"] >= state["number_guess_max"]: # Changed to >= to handle edge case
+            if state["number_guess_min"] >= state["number_guess_max"]:
                 st.write(f"Your number is {state['number_guess_min']}! I guessed it!")
                 state["number_game_count"] += 1
                 state["session_games"].append("number")
