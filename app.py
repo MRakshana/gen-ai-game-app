@@ -1,5 +1,5 @@
 import streamlit as st
-from langgraph.graph import StateGraph, END
+from langgraph.graph import StateGraphBuilder, END
 from typing import TypedDict, Literal
 
 class GameState(TypedDict):
@@ -87,9 +87,7 @@ def word_game_agent(state: GameState) -> GameState:
     return state
 
 def create_game_graph():
-    from langgraph.graph import StateGraphBuilder
     builder = StateGraphBuilder(GameState)
-
     builder.add_state("menu", menu)
     builder.add_state("start_number_game", number_game_agent)
     builder.add_state("start_word_game", word_game_agent)
