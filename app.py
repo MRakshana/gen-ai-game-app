@@ -104,13 +104,23 @@ def create_game_graph():
     print("Compiled graph:", compiled_graph)  # Debug print to verify the returned object
     
     return compiled_graph
+    
+def initialize_state():
+    return GameState(
+        _next="menu",
+        number_guess_min=1,
+        number_guess_max=50,
+        number_game_count=0,
+        word_game_count=0,
+        session_games=[],
+    )
 
 def main():
     if "game_state" not in st.session_state:
-        st.session_state.game_state = initialize_state()
+        st.session_state.game_state = initialize_state()  # Now it will work
 
     game_graph = create_game_graph()
-    
+
     # Check if game_graph is actually a StateGraph object
     print("Game graph type:", type(game_graph))
     
@@ -128,3 +138,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
