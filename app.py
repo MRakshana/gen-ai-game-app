@@ -3,7 +3,7 @@ from langgraph.graph import StateGraph, END
 
 # 1. Define the state schema
 class GameState(TypedDict):
-    _next: list[str]  # No need for Multiple annotation
+    _next: list[str]  # List of nodes to transition to
     value: int
 
 # 2. Define your node functions
