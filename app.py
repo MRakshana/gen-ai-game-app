@@ -237,7 +237,7 @@ def main():
         st.session_state['word_game_id'] = 0
 
     builder = StateGraph(GameState)
-    builder.set_recursion_limit(100) # Increase recursion limit
+    # builder.set_recursion_limit(100) # Increase recursion limit - Removed incorrect attribute
 
     builder.add_node("menu", lambda state: tracker.track(game_selector_agent(state)))
     builder.add_node("start_number_game", lambda state: tracker.track(number_game_agent(state)))
