@@ -1,109 +1,48 @@
-import gradio as gr
-from langgraph.graph import StateGraph
-from typing import TypedDict, Annotated
+from typing import Annotated, TypedDict
+import operator
+from langgraph.graph import StateGraph, END
 
-# Define GameState
+# 1. Define your state schema
 class GameState(TypedDict):
-    _next: Annotated[str, "output"]
-    number_guess_min: int
-    number_guess_max: int
-    number_game_count: int
-    word_game_count: int
-    session_games: list[str]
+    _next: Annotated[list[str], operator.mul]  # allow multiple transitions
+    value: int
 
-# Initialize game state
-def initialize_state() -> GameState:
+# 2. Define your node handlers
+def start_node(state: GameState) -> GameState:
+    print("Start node executing.")
+    # Decide to go to two other nodes
     return {
-        "_next": "menu",
-        "number_guess_min": 1,
-        "number_guess_max": 50,
-        "number_game_count": 0,
-        "word_game_count": 0,
-        "session_games": [],
+        "_next": ["check_even", "check_positive"],
+        "value": state["value"]
     }
 
-# Menu agent
-def menu(state: GameState) -> GameState:
-    return state  # No-op; Gradio handles button triggers externally
-
-# Number guessing logic
-def number_game_agent(state: GameState, user_input: str = None) -> GameState:
-    min_val = state["number_guess_min"]
-    max_val = state["number_guess_max"]
-    mid = (min_val + max_val) // 2
-
-    if user_input == "yes":
-        state["number_guess_min"] = mid + 1
-    elif user_input == "no":
-        state["number_guess_max"] = mid
-
-    if state["number_guess_min"] >= state["number_guess_max"]:
-        state["number_game_count"] += 1
-        state["session_games"].append("number")
-        state["_next"] = "menu"
-        state["number_guess_min"] = 1
-        state["number_guess_max"] = 50
+def check_even(state: GameState) -> GameState:
+    if state["value"] % 2 == 0:
+        print("Even number.")
     else:
-        state["_next"] = "start_number_game"
+        print("Odd number.")
+    return {"_next": END, "value": state["value"]}
 
-    return state
-
-# Word guessing logic
-def word_game_agent(state: GameState, guess: str = "") -> GameState:
-    if guess.lower() == "elephant":
-        state["word_game_count"] += 1
-        state["session_games"].append("word")
-        state["_next"] = "menu"
+def check_positive(state: GameState) -> GameState:
+    if state["value"] > 0:
+        print("Positive number.")
     else:
-        state["_next"] = "start_word_game"
-    return state
+        print("Non-positive number.")
+    return {"_next": END, "value": state["value"]}
 
-# Game flow graph
-def create_game_graph():
-    builder = StateGraph(GameState)
-    builder.add_node("menu", menu)
-    builder.add_node("start_number_game", number_game_agent)
-    builder.add_node("start_word_game", word_game_agent)
-    builder.set_entry_point("menu")
-    builder.set_finish_point("menu")
-    builder.add_edge("menu", "start_number_game")
-    builder.add_edge("menu", "start_word_game")
-    builder.add_edge("start_number_game", "menu")
-    builder.add_edge("start_number_game", "start_number_game")
-    builder.add_edge("start_word_game", "menu")
-    builder.add_edge("start_word_game", "start_word_game")
-    return builder.compile()
+# 3. Define the graph
+builder = StateGraph(GameState)
 
-# Gradio UI
-state = initialize_state()
-graph = create_game_graph()
+builder.add_node("start", start_node)
+builder.add_node("check_even", check_even)
+builder.add_node("check_positive", check_positive)
 
-def game_interface(choice=None, response=None):
-    global state
-    if state["_next"] == "menu":
-        if choice == "Number":
-            state["_next"] = "start_number_game"
-        elif choice == "Word":
-            state["_next"] = "start_word_game"
+builder.set_entry_point("start")
+builder.add_edge("check_even", END)
+builder.add_edge("check_positive", END)
 
-    for updated_state in graph.stream(state):
-        state = updated_state
-        if updated_state["_next"] == "menu":
-            break
+graph = builder.compile()
 
-    mid = (state["number_guess_min"] + state["number_guess_max"]) // 2
-    if state["_next"] == "start_number_game":
-        return f"Is your number greater than {mid}?", ["yes", "no"]
-    elif state["_next"] == "start_word_game":
-        return "Clue: It's a large animal with a trunk. Guess the word:", ["elephant"]
-    else:
-        return "Choose a game to play:", ["Number", "Word"]
-
-iface = gr.Interface(
-    fn=game_interface,
-    inputs=[gr.Radio(["Number", "Word", "yes", "no", "elephant"], label="Input")],
-    outputs=[gr.Text(), gr.Label()],
-    title="GenAI Game App",
-)
-
-iface.launch()
+# 4. Run the graph
+initial_state = {"_next": ["start"], "value": 5}
+graph.invoke(initial_state)
