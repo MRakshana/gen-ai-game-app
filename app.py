@@ -3,9 +3,9 @@ from langgraph.graph import StateGraph
 from typing import TypedDict
 from typing_extensions import Annotated
 
-# Define GameState TypedDict with Annotated for single-value '_next'
+# Define GameState TypedDict with Annotated for '_next' to handle transitions
 class GameState(TypedDict):
-    _next: Annotated[str, "next_step"]  # Only one value allowed for '_next'
+    _next: Annotated[str, "next_step"]  # Ensuring only one transition at a time
     number_guess_min: int
     number_guess_max: int
     number_game_count: int
@@ -23,7 +23,7 @@ def initialize_state() -> GameState:
         "session_games": [],
     }
 
-# Menu agent
+# Menu agent: Allows user to choose a game
 def menu(state: GameState) -> GameState:
     st.title("🧠 Gen AI Game App")
     st.subheader("Choose a game")
@@ -91,7 +91,7 @@ def word_game_agent(state: GameState) -> GameState:
 
     return state
 
-# Graph creation with proper state transitions and single `_next` values
+# Graph creation with proper state transitions and single '_next' values
 def create_game_graph():
     builder = StateGraph(GameState)
     builder.add_node("menu", menu)
