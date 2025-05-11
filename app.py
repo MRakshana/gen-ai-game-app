@@ -1,61 +1,27 @@
-
-#!/usr/bin/env python
-# coding: utf-8
-
-from langgraph.graph import StateGraph, END
-from typing import TypedDict, List, Optional
 import streamlit as st
-from PIL import Image
+from langgraph.graph import StateGraph, END
+from typing import TypedDict, Literal
 
-# ----- Game State -----
 class GameState(TypedDict):
-    current_game: Optional[str]
+    _next: str
     number_guess_min: int
     number_guess_max: int
     number_game_count: int
     word_game_count: int
-    session_games: List[str]
-    word_attempts: int
-    target_word: Optional[str]
-    possible_words: List[str]
-    _next: str
+    session_games: list[str]
 
-# ----- Word Game Data -----
-WORD_LIST = ["apple", "chair", "elephant", "guitar", "rocket", "pencil", "pizza", "tiger"]
-CLUE_QUESTIONS = {
-    "Is it a living thing?": lambda word: word in ["apple", "elephant", "tiger"],
-    "Is it an animal?": lambda word: word in ["elephant", "tiger"],
-    "Is it an object?": lambda word: word not in ["elephant", "tiger", "apple"],
-    "Is it used in school?": lambda word: word in ["chair", "pencil"],
-    "Is it a musical instrument?": lambda word: word == "guitar",
-    "Is it edible?": lambda word: word in ["apple", "pizza"],
-    "Does it have four legs?": lambda word: word in ["elephant", "tiger", "chair"],
-    "Can it fly?": lambda word: word == "rocket"
-}
+def menu(state: GameState) -> GameState:
+    st.title("🧠 Gen AI Game App")
+    st.subheader("Choose a game")
+    col1, col2 = st.columns(2)
 
-# ----- Execution Tracker -----
-class ExecutionTracker:
-    def __init__(self):
-        self.steps = []
-
-    def track(self, state):
-        self.steps.append({
-            "node": state.get("_next", END),
-            "game": state.get("current_game"),
-            "action": f"Game: {state.get('current_game')}" if state.get("current_game") else "Menu"
-        })
-        return state
-
-# ----- Game Agents -----
-def game_selector_agent(state: GameState) -> GameState:
-    st.header("🎮 Choose a Game")
-    game_choice = st.radio("Select a game:", ("Number Game", "Word Game"))
-    if game_choice == "Number Game":
-        state["current_game"] = "number"
+    if col1.button("Play Number Guessing Game"):
         state["_next"] = "start_number_game"
-    else:
-        state["current_game"] = "word"
+    elif col2.button("Play Word Clue Game"):
         state["_next"] = "start_word_game"
+    else:
+        state["_next"] = "menu"
+
     return state
 
 def number_game_agent(state: GameState) -> GameState:
@@ -63,13 +29,36 @@ def number_game_agent(state: GameState) -> GameState:
     max_val = state["number_guess_max"]
     mid = (min_val + max_val) // 2
 
+    if min_val >= max_val:
+        st.success(f"🎯 Your number is {min_val}! I guessed it!")
+        state["number_game_count"] += 1
+        state["session_games"].append("number")
+        state["number_guess_min"] = 1
+        state["number_guess_max"] = 50
+        state["_next"] = "menu"
+        return state
+
+    if "last_guess" not in st.session_state:
+        st.session_state.last_guess = None
+
+    st.write("Number Game Agent")
     st.write(f"Is your number greater than {mid}?")
     col1, col2 = st.columns(2)
 
     if col1.button("Yes"):
-        state["number_guess_min"] = mid + 1
+        st.session_state.last_guess = "yes"
     elif col2.button("No"):
+        st.session_state.last_guess = "no"
+
+    if st.session_state.last_guess == "yes":
+        state["number_guess_min"] = mid + 1
+        st.session_state.last_guess = None
+    elif st.session_state.last_guess == "no":
         state["number_guess_max"] = mid
+        st.session_state.last_guess = None
+    else:
+        state["_next"] = "start_number_game"
+        return state
 
     if state["number_guess_min"] >= state["number_guess_max"]:
         st.success(f"🎯 Your number is {state['number_guess_min']}! I guessed it!")
@@ -84,91 +73,57 @@ def number_game_agent(state: GameState) -> GameState:
     return state
 
 def word_game_agent(state: GameState) -> GameState:
-    if not state["possible_words"]:
-        state["possible_words"] = WORD_LIST.copy()
-        state["target_word"] = st.text_input("Enter your secret word:", key="target_word")
-        st.info("Think of a word from this list: " + ", ".join(WORD_LIST))
-
-    questions = list(CLUE_QUESTIONS.keys())
-    if state["word_attempts"] < len(questions):
-        question = questions[state["word_attempts"]]
-        st.write(question)
-        col1, col2 = st.columns(2)
-
-        answer = None
-        if col1.button("Yes"):
-            answer = "yes"
-        elif col2.button("No"):
-            answer = "no"
-
-        if answer:
-            predicate = CLUE_QUESTIONS[question]
-            state["possible_words"] = [
-                word for word in state["possible_words"]
-                if (predicate(word) and answer == "yes") or
-                   (not predicate(word) and answer == "no")
-            ]
-            state["word_attempts"] += 1
-
-    if len(state["possible_words"]) == 1:
-        guess = state["possible_words"][0]
-        st.write(f"My guess is: **{guess}**")
-        correct = st.radio("Am I right?", ("Yes", "No"))
-        if correct == "Yes":
-            st.success("Yay! I guessed your word!")
-        else:
-            st.warning("Oops! Let me try again.")
+    st.write("Word Game Agent")
+    st.write("Clue: It's a large animal with a trunk.")
+    answer = st.text_input("Your Guess:", key="word_game_input")
+    if answer.lower() == "elephant":
+        st.success("Correct! 🎉")
         state["word_game_count"] += 1
         state["session_games"].append("word")
-        state["possible_words"] = []
         state["_next"] = "menu"
     else:
+        st.warning("Try again!")
         state["_next"] = "start_word_game"
-
     return state
 
-# ----- Router -----
-def router(state: GameState) -> str:
-    return state.get("_next", END)
-
-# ----- Main App -----
-def main():
-    st.set_page_config(page_title="GenAI Game App", layout="centered")
-    st.title("🧠 GenAI Multi-Game App")
-    st.markdown("Choose and play one of the two games: Number Guess or Word Guess.")
-
-    tracker = ExecutionTracker()
-
-    initial_state: GameState = {
-        "current_game": None,
-        "number_guess_min": 1,
-        "number_guess_max": 50,
-        "number_game_count": 0,
-        "word_game_count": 0,
-        "session_games": [],
-        "word_attempts": 0,
-        "target_word": None,
-        "possible_words": [],
-        "_next": "menu"
-    }
-
+def create_game_graph():
     builder = StateGraph(GameState)
-    builder.add_node("menu", lambda state: tracker.track(game_selector_agent(state)))
-    builder.add_node("start_number_game", lambda state: tracker.track(number_game_agent(state)))
-    builder.add_node("start_word_game", lambda state: tracker.track(word_game_agent(state)))
-
+    builder.add_state("menu", menu)
+    builder.add_state("start_number_game", number_game_agent)
+    builder.add_state("start_word_game", word_game_agent)
     builder.set_entry_point("menu")
-    builder.add_conditional_edges("menu", router)
-    builder.add_conditional_edges("start_number_game", router)
-    builder.add_conditional_edges("start_word_game", router)
+    builder.add_edge("menu", "start_number_game")
+    builder.add_edge("menu", "start_word_game")
+    builder.add_edge("start_number_game", "start_number_game")
+    builder.add_edge("start_number_game", "menu")
+    builder.add_edge("start_word_game", "menu")
+    builder.add_edge("start_word_game", "start_word_game")
+    builder.set_finish_point("menu")
+    return builder.compile(config={"recursion_limit": 100})
 
-    app = builder.compile()
-    final_state = app.invoke(initial_state)
+def initialize_state():
+    return GameState(
+        _next="menu",
+        number_guess_min=1,
+        number_guess_max=50,
+        number_game_count=0,
+        word_game_count=0,
+        session_games=[],
+    )
 
-    st.markdown("---")
-    st.subheader("🧾 Final Game State")
-    for key, value in final_state.items():
-        st.write(f"**{key}**: {value}")
+def main():
+    if "game_state" not in st.session_state:
+        st.session_state.game_state = initialize_state()
 
-# ---- Run Streamlit App ----
-main()
+    game_graph = create_game_graph()
+
+    for updated_state in game_graph.stream(
+        st.session_state.game_state,
+        config={"recursion_limit": 100}
+    ):
+        st.session_state.game_state = updated_state
+        if updated_state["_next"] == "menu":
+            break
+
+if __name__ == "__main__":
+    main()
