@@ -16,15 +16,15 @@ class GameState(TypedDict):
 # ----------------------------
 # Initialize the game state
 # ----------------------------
-def initialize_state() -> GameState:
-    return GameState(
-        _next="menu",
-        number_guess_min=1,
-        number_guess_max=50,
-        number_game_count=0,
-        word_game_count=0,
-        session_games=[],
-    )
+def initialize_state():
+    return {
+        "_next": "menu",
+        "number_guess_min": 1,
+        "number_guess_max": 50,
+        "number_game_count": 0,
+        "word_game_count": 0,
+        "session_games": [],
+    }
 
 # ----------------------------
 # Menu Agent
