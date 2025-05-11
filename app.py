@@ -28,14 +28,18 @@ def menu(state: GameState) -> GameState:
     st.subheader("Choose a game")
     col1, col2 = st.columns(2)
 
-    if col1.button("Play Number Guessing Game"):
+    if col1.button("Play Number Guessing Game") and state["_next"] != "start_number_game":
         state["_next"] = "start_number_game"
-    elif col2.button("Play Word Clue Game"):
+    elif col2.button("Play Word Clue Game") and state["_next"] != "start_word_game":
         state["_next"] = "start_word_game"
+    
     return state
 
 # Number guessing game agent
 def number_game_agent(state: GameState) -> GameState:
+    if state["_next"] != "start_number_game":
+        return state
+    
     min_val = state.get("number_guess_min", 1)
     max_val = state.get("number_guess_max", 50)
     mid = (min_val + max_val) // 2
@@ -71,6 +75,9 @@ def number_game_agent(state: GameState) -> GameState:
 
 # Word guessing game agent
 def word_game_agent(state: GameState) -> GameState:
+    if state["_next"] != "start_word_game":
+        return state
+    
     st.subheader("🧩 Word Clue Game")
     st.write("Clue: It's a large animal with a trunk.")
     answer = st.text_input("Your Guess:", key="word_game_input")
