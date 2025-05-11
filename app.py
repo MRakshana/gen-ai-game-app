@@ -1,10 +1,10 @@
 import streamlit as st
-from langgraph.graph import StateGraph, Annotated
+from langgraph.graph import StateGraph
 from typing import TypedDict
 
 # Define GameState TypedDict
 class GameState(TypedDict):
-    _next: Annotated[str]
+    _next: str
     number_guess_min: int
     number_guess_max: int
     number_game_count: int
@@ -14,7 +14,7 @@ class GameState(TypedDict):
 # Initialize the state with default values
 def initialize_state() -> GameState:
     return {
-        "_next": Annotated("menu"),
+        "_next": "menu",  # Direct string value instead of Annotated
         "number_guess_min": 1,
         "number_guess_max": 50,
         "number_game_count": 0,
@@ -29,9 +29,9 @@ def menu(state: GameState) -> GameState:
     col1, col2 = st.columns(2)
 
     if col1.button("Play Number Guessing Game"):
-        state["_next"] = Annotated("start_number_game")
+        state["_next"] = "start_number_game"
     elif col2.button("Play Word Clue Game"):
-        state["_next"] = Annotated("start_word_game")
+        state["_next"] = "start_word_game"
 
     return state
 
@@ -64,9 +64,9 @@ def number_game_agent(state: GameState) -> GameState:
         state["session_games"].append("number")
         state["number_guess_min"] = 1
         state["number_guess_max"] = 50
-        state["_next"] = Annotated("menu")
+        state["_next"] = "menu"
     else:
-        state["_next"] = Annotated("start_number_game")
+        state["_next"] = "start_number_game"
 
     return state
 
@@ -81,12 +81,12 @@ def word_game_agent(state: GameState) -> GameState:
             st.success("Correct! 🎉")
             state["word_game_count"] += 1
             state["session_games"].append("word")
-            state["_next"] = Annotated("menu")
+            state["_next"] = "menu"
         else:
             st.warning("Try again!")
-            state["_next"] = Annotated("start_word_game")
+            state["_next"] = "start_word_game"
     else:
-        state["_next"] = Annotated("start_word_game")
+        state["_next"] = "start_word_game"
 
     return state
 
@@ -116,6 +116,7 @@ def main():
     # Process the game flow
     for updated_state in game_graph.stream(st.session_state.game_state):
         st.session_state.game_state = updated_state
+        # We ensure the state only returns to "menu" once we are done with the game
         if updated_state.get("_next") == "menu":
             break
 
