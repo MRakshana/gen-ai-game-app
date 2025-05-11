@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 # coding: utf-8
 
@@ -68,33 +67,32 @@ def number_game_agent(state: GameState) -> GameState:
     st.write(f"Is your number greater than {mid}?")
     col1, col2 = st.columns(2)
     session_id = st.session_state.get('session_id', 0)
-    # number_game_id = st.session_state.get('number_game_id', 0)  # Unique ID for the current game
     if 'number_game_counter' not in st.session_state:
         st.session_state['number_game_counter'] = 0
     with col1:
         if st.button("Yes", key=f"number_game_yes_{session_id}_{st.session_state['number_game_counter']}"):
             state["number_guess_min"] = mid + 1
-            if state["number_guess_min"] == state["number_guess_max"]:
+            if state["number_guess_min"] >= state["number_guess_max"]: # Changed to >= to handle edge case
                 st.write(f"Your number is {state['number_guess_min']}! I guessed it!")
                 state["number_game_count"] += 1
                 state["session_games"].append("number")
                 state["number_guess_min"] = 1
                 state["number_guess_max"] = 50
                 state["_next"] = "menu"
-                st.session_state['number_game_counter'] = 0 #reset counter
+                st.session_state['number_game_counter'] = 0
             else:
                 state["_next"] = "start_number_game"
     with col2:
         if st.button("No", key=f"number_game_no_{session_id}_{st.session_state['number_game_counter']}"):
             state["number_guess_max"] = mid
-            if state["number_guess_min"] == state["number_guess_max"]:
+            if state["number_guess_min"] >= state["number_guess_max"]: # Changed to >= to handle edge case
                 st.write(f"Your number is {state['number_guess_min']}! I guessed it!")
                 state["number_game_count"] += 1
                 state["session_games"].append("number")
                 state["number_guess_min"] = 1
                 state["number_guess_max"] = 50
                 state["_next"] = "menu"
-                st.session_state['number_game_counter'] = 0 #reset counter
+                st.session_state['number_game_counter'] = 0
             else:
                 state["_next"] = "start_number_game"
     st.session_state['number_game_counter'] += 1
@@ -114,7 +112,6 @@ def word_game_agent(state: GameState) -> GameState:
         st.write(question)
         col1, col2 = st.columns(2)
         session_id = st.session_state.get('session_id', 0)
-        # word_game_id = st.session_state.get('word_game_id', 0)  # Unique ID for the current game
         if 'word_game_counter' not in st.session_state:
             st.session_state['word_game_counter'] = 0
         with col1:
@@ -156,7 +153,7 @@ def word_game_agent(state: GameState) -> GameState:
                     state["session_games"].append("word")
                     state["possible_words"] = None
                     state["_next"] = "menu"
-                    st.session_state['word_game_counter'] = 0 #reset
+                    st.session_state['word_game_counter'] = 0
                 elif correct == "No":
                     st.write("Hmm, let me try again.")
                     state["possible_words"] = WORD_LIST.copy()
@@ -187,7 +184,7 @@ def word_game_agent(state: GameState) -> GameState:
                 state["session_games"].append("word")
                 state["possible_words"] = None
                 state["_next"] = "menu"
-                st.session_state['word_game_counter'] = 0 #reset
+                st.session_state['word_game_counter'] = 0
             elif correct == "No":
                 st.write(f"Oops! The correct word was: **{state['target_word']}**")
                 state["word_count"] += 1
@@ -232,13 +229,13 @@ def main():
         st.session_state['session_id'] = 0
     st.session_state['session_id'] += 1
 
-    if 'number_game_id' not in st.session_state:  # Initialize number game id
+    if 'number_game_id' not in st.session_state:
         st.session_state['number_game_id'] = 0
-    if 'word_game_id' not in st.session_state:  # Initialize word game id
+    if 'word_game_id' not in st.session_state:
         st.session_state['word_game_id'] = 0
 
     builder = StateGraph(GameState)
-    # builder.set_recursion_limit(100) # Increase recursion limit - Removed incorrect attribute
+    # builder.set_recursion_limit(100) # Removed recursion limit
 
     builder.add_node("menu", lambda state: tracker.track(game_selector_agent(state)))
     builder.add_node("start_number_game", lambda state: tracker.track(number_game_agent(state)))
