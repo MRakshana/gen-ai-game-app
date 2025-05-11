@@ -1,10 +1,11 @@
 import streamlit as st
 from langgraph.graph import StateGraph
+from langgraph.state import Annotated
 from typing import TypedDict
 
 # Define GameState TypedDict
 class GameState(TypedDict):
-    _next: str
+    _next: Annotated[str]
     number_guess_min: int
     number_guess_max: int
     number_game_count: int
@@ -29,9 +30,9 @@ def menu(state: GameState) -> GameState:
     col1, col2 = st.columns(2)
 
     if col1.button("Play Number Guessing Game"):
-        state["_next"] = "start_number_game"
+        state["_next"] = Annotated("start_number_game")
     elif col2.button("Play Word Clue Game"):
-        state["_next"] = "start_word_game"
+        state["_next"] = Annotated("start_word_game")
 
     return state
 
@@ -64,9 +65,9 @@ def number_game_agent(state: GameState) -> GameState:
         state["session_games"].append("number")
         state["number_guess_min"] = 1
         state["number_guess_max"] = 50
-        state["_next"] = "menu"  # Transition back to the menu after guessing the number
+        state["_next"] = Annotated("menu")  # Transition back to the menu after guessing the number
     else:
-        state["_next"] = "start_number_game"  # Keep the user in the number guessing game
+        state["_next"] = Annotated("start_number_game")  # Keep the user in the number guessing game
 
     return state
 
@@ -81,12 +82,12 @@ def word_game_agent(state: GameState) -> GameState:
             st.success("Correct! 🎉")
             state["word_game_count"] += 1
             state["session_games"].append("word")
-            state["_next"] = "menu"  # Transition back to the menu after guessing the word
+            state["_next"] = Annotated("menu")  # Transition back to the menu after guessing the word
         else:
             st.warning("Try again!")
-            state["_next"] = "start_word_game"  # Stay in word guessing game if incorrect
+            state["_next"] = Annotated("start_word_game")  # Stay in word guessing game if incorrect
     else:
-        state["_next"] = "start_word_game"  # Stay in word guessing game if no input
+        state["_next"] = Annotated("start_word_game")  # Stay in word guessing game if no input
 
     return state
 
