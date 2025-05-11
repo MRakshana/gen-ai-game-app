@@ -2,6 +2,7 @@ import streamlit as st
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, Literal
 
+# Define GameState TypedDict
 class GameState(TypedDict):
     _next: str
     number_guess_min: int
@@ -10,6 +11,18 @@ class GameState(TypedDict):
     word_game_count: int
     session_games: list[str]
 
+# Initialize the state with default values
+def initialize_state():
+    return GameState(
+        _next="menu",
+        number_guess_min=1,
+        number_guess_max=50,
+        number_game_count=0,
+        word_game_count=0,
+        session_games=[],
+    )
+
+# Define menu agent
 def menu(state: GameState) -> GameState:
     st.title("🧠 Gen AI Game App")
     st.subheader("Choose a game")
@@ -24,6 +37,7 @@ def menu(state: GameState) -> GameState:
 
     return state
 
+# Define number guessing game agent
 def number_game_agent(state: GameState) -> GameState:
     min_val = state["number_guess_min"]
     max_val = state["number_guess_max"]
@@ -72,6 +86,7 @@ def number_game_agent(state: GameState) -> GameState:
 
     return state
 
+# Define word clue guessing game agent
 def word_game_agent(state: GameState) -> GameState:
     st.write("Word Game Agent")
     st.write("Clue: It's a large animal with a trunk.")
@@ -86,6 +101,7 @@ def word_game_agent(state: GameState) -> GameState:
         state["_next"] = "start_word_game"
     return state
 
+# Create the game graph with nodes and edges
 def create_game_graph():
     builder = StateGraph(GameState)
     builder.add_node("menu", menu)
@@ -99,25 +115,12 @@ def create_game_graph():
     builder.add_edge("start_word_game", "menu")
     builder.add_edge("start_word_game", "start_word_game")
     builder.set_finish_point("menu")
-    
-    compiled_graph = builder.compile()  # Get the compiled graph
-    print("Compiled graph:", compiled_graph)  # Debug print to verify the returned object
-    
-    return compiled_graph
-    
-def initialize_state():
-    return GameState(
-        _next="menu",
-        number_guess_min=1,
-        number_guess_max=50,
-        number_game_count=0,
-        word_game_count=0,
-        session_games=[],
-    )
+    return builder.compile()
 
+# Main function to control the app flow
 def main():
     if "game_state" not in st.session_state:
-        st.session_state.game_state = initialize_state()  # Now it will work
+        st.session_state.game_state = initialize_state()
 
     game_graph = create_game_graph()
 
@@ -127,8 +130,7 @@ def main():
     # Now attempt to stream if it is the correct type
     if isinstance(game_graph, StateGraph):
         for updated_state in game_graph.stream(
-            st.session_state.game_state,
-            config={"recursion_limit": 100}
+            st.session_state.game_state
         ):
             st.session_state.game_state = updated_state
             if updated_state["_next"] == "menu":
@@ -138,5 +140,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
