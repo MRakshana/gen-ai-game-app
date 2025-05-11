@@ -269,3 +269,4 @@ if __name__ == "__main__":
     # Check if running in a Streamlit environment (no DISPLAY variable)
     if "DISPLAY" not in os.environ:
         main()
+
