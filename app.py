@@ -3,7 +3,7 @@ from langgraph.graph import StateGraph, END
 from typing import TypedDict, Literal
 
 class GameState(TypedDict):
-    _next: strfrom langgraph.graph import StateGraph, END
+    _next: str
     number_guess_min: int
     number_guess_max: int
     number_game_count: int
