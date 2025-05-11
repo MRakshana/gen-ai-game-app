@@ -87,7 +87,6 @@ def word_game_agent(state: GameState) -> GameState:
     return state
 
 def create_game_graph():
-    def create_game_graph():
     builder = StateGraph(GameState)
     builder.add_node("menu", menu)
     builder.add_node("start_number_game", number_game_agent)
