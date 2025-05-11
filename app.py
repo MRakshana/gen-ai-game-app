@@ -1,6 +1,6 @@
 import streamlit as st
-from langgraph.graph import StateGraph, END
-from typing import TypedDict, Literal
+from langgraph.graph import StateGraph
+from typing import TypedDict
 
 # Define GameState TypedDict
 class GameState(TypedDict):
@@ -37,14 +37,15 @@ def menu(state: GameState) -> GameState:
     elif col2.button("Play Word Clue Game") and state["_next_word_game"] != "start_word_game":
         state["_next_word_game"] = "start_word_game"
     
-    state["_next"] = "menu"  # Menu always leads back to itself
+    # Ensure state flows to menu
+    state["_next"] = "menu"
     return state
 
 # Number guessing game agent
 def number_game_agent(state: GameState) -> GameState:
     if state["_next_number_game"] != "start_number_game":
         return state
-    
+
     min_val = state.get("number_guess_min", 1)
     max_val = state.get("number_guess_max", 50)
     mid = (min_val + max_val) // 2
@@ -74,7 +75,7 @@ def number_game_agent(state: GameState) -> GameState:
         state["number_guess_max"] = 50
         state["_next_number_game"] = "menu"  # End the number game
     else:
-        state["_next_number_game"] = "start_number_game"
+        state["_next_number_game"] = "start_number_game"  # Keep the game going
 
     return state
 
@@ -95,9 +96,9 @@ def word_game_agent(state: GameState) -> GameState:
             state["_next_word_game"] = "menu"  # End the word game
         else:
             st.warning("Try again!")
-            state["_next_word_game"] = "start_word_game"
+            state["_next_word_game"] = "start_word_game"  # Keep the word game going
     else:
-        state["_next_word_game"] = "start_word_game"
+        state["_next_word_game"] = "start_word_game"  # Keep the word game going
 
     return state
 
@@ -124,7 +125,7 @@ def main():
 
     game_graph = create_game_graph()
 
-    # Use session state to manage game flow
+    # Process the game flow
     for updated_state in game_graph.stream(st.session_state.game_state):
         st.session_state.game_state = updated_state
         if updated_state.get("_next") == "menu":
