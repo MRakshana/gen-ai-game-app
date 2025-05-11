@@ -32,9 +32,6 @@ def menu(state: GameState) -> GameState:
         state["_next"] = "start_number_game"
     elif col2.button("Play Word Clue Game"):
         state["_next"] = "start_word_game"
-    else:
-        state["_next"] = "menu"
-
     return state
 
 # Number guessing game agent
@@ -115,6 +112,7 @@ def main():
 
     game_graph = create_game_graph()
 
+    # Use session state to manage game flow
     for updated_state in game_graph.stream(st.session_state.game_state):
         st.session_state.game_state = updated_state
         if updated_state.get("_next") == "menu":
