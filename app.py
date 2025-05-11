@@ -99,7 +99,7 @@ def create_game_graph():
     builder.add_edge("start_word_game", "menu")
     builder.add_edge("start_word_game", "start_word_game")
     builder.set_finish_point("menu")
-    return builder.compile(config={"recursion_limit": 100})
+    return builder.compile
 
 def initialize_state():
     return GameState(
