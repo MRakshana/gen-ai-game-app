@@ -99,31 +99,32 @@ def create_game_graph():
     builder.add_edge("start_word_game", "menu")
     builder.add_edge("start_word_game", "start_word_game")
     builder.set_finish_point("menu")
-    return builder.compile
-
-def initialize_state():
-    return GameState(
-        _next="menu",
-        number_guess_min=1,
-        number_guess_max=50,
-        number_game_count=0,
-        word_game_count=0,
-        session_games=[],
-    )
+    
+    compiled_graph = builder.compile()  # Get the compiled graph
+    print("Compiled graph:", compiled_graph)  # Debug print to verify the returned object
+    
+    return compiled_graph
 
 def main():
     if "game_state" not in st.session_state:
         st.session_state.game_state = initialize_state()
 
     game_graph = create_game_graph()
-
-    for updated_state in game_graph.stream(
-        st.session_state.game_state,
-        config={"recursion_limit": 100}
-    ):
-        st.session_state.game_state = updated_state
-        if updated_state["_next"] == "menu":
-            break
+    
+    # Check if game_graph is actually a StateGraph object
+    print("Game graph type:", type(game_graph))
+    
+    # Now attempt to stream if it is the correct type
+    if isinstance(game_graph, StateGraph):
+        for updated_state in game_graph.stream(
+            st.session_state.game_state,
+            config={"recursion_limit": 100}
+        ):
+            st.session_state.game_state = updated_state
+            if updated_state["_next"] == "menu":
+                break
+    else:
+        st.error("Failed to create a valid game graph.")
 
 if __name__ == "__main__":
     main()
