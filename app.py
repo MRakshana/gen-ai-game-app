@@ -1,113 +1,88 @@
 import streamlit as st
-from typing import TypedDict
-from langgraph.graph import StateGraph, END
 import random
 
-# 1. Define the state schema
-class GameState(TypedDict):
-    _next: list[str]  # List of nodes to transition to
-    value: int
-    word_to_guess: str
-    guessed_word: str
+# Define the global counters
+number_game_counter = 0
+word_game_counter = 0
 
-# 2. Define your node functions with added debug prints
-def start_node(state: GameState) -> GameState:
-    st.write("\n[Start Node]")
-    value = state["value"]
-    next_steps = []
+# List of words for the Word Clue Guesser game
+word_list = ["apple", "chair", "elephant", "guitar", "rocket", "pencil", "pizza", "tiger"]
 
-    # Number guessing game logic
-    if value % 2 == 0:
-        next_steps.append("check_even")
+# 1. Number Game - Binary Search Logic
+def number_game():
+    global number_game_counter
+    st.write("Welcome to the Number Game!")
+    st.write("Think of a number between 1 and 50, and I'll guess it.")
+    
+    low, high = 1, 50
+    attempts = 0
+    guessed_number = None
+    
+    while guessed_number != "correct":
+        # Guessing number based on binary search
+        guess = (low + high) // 2
+        attempts += 1
+        guessed_number = st.radio(f"Is your number {guess}?", ["greater", "less", "correct"])
+        
+        if guessed_number == "greater":
+            low = guess + 1
+        elif guessed_number == "less":
+            high = guess - 1
+
+    number_game_counter += 1
+    st.write(f"Congrats! I guessed your number {guess} in {attempts} attempts.")
+    st.write(f"Number Game counter: {number_game_counter}")
+    st.write("Returning to the main menu...")
+
+# 2. Word Clue Guesser Game
+def word_clue_guesser():
+    global word_game_counter
+    st.write("Welcome to the Word Clue Guesser!")
+    st.write("Choose a word from the following list:")
+    st.write(word_list)
+
+    word_to_guess = random.choice(word_list)
+    questions_asked = 0
+    max_questions = 5
+    correct_guess = False
+
+    # Ask descriptive yes/no/maybe questions
+    while questions_asked < max_questions and not correct_guess:
+        question = f"Is it a {random.choice(['fruit', 'object', 'animal', 'food', 'vehicle'])}?"
+        answer = st.radio(question, ["Yes", "No", "Maybe"])
+
+        # If the user answers Yes or Maybe, make a guess
+        if answer in ["Yes", "Maybe"]:
+            guess = word_to_guess  # This is a simple logic; you can enhance this with more sophisticated question handling
+            correct_guess = (guess.lower() == word_to_guess.lower())
+        else:
+            questions_asked += 1
+
+    if correct_guess:
+        st.write(f"Success! I guessed the word: {word_to_guess}.")
     else:
-        next_steps.append("check_odd")
+        retry = st.radio("I couldn't guess the word. Would you like to try again?", ["Yes", "No"])
+        if retry == "Yes":
+            word_clue_guesser()
+        else:
+            st.write("Returning to the main menu...")
 
-    if value > 0:
-        next_steps.append("check_positive")
-    else:
-        next_steps.append("check_non_positive")
+    word_game_counter += 1
+    st.write(f"Word Game counter: {word_game_counter}")
+    st.write("Returning to the main menu...")
 
-    st.write(f"Next steps (Number Game): {next_steps}")
-    return {"_next": next_steps, "value": value, "word_to_guess": state["word_to_guess"], "guessed_word": state["guessed_word"]}
+# Main Menu UI
+def main_menu():
+    game_mode = st.radio("Choose a game mode", ["Number Game", "Word Clue Guesser"])
 
-def check_even(state: GameState) -> GameState:
-    st.write(f"✔️ It's even! Current value: {state['value']}")
-    return {"_next": [END], "value": state["value"], "word_to_guess": state["word_to_guess"], "guessed_word": state["guessed_word"]}
+    if game_mode == "Number Game":
+        if st.button("Start Number Game"):
+            number_game()
 
-def check_odd(state: GameState) -> GameState:
-    st.write(f"✔️ It's odd! Current value: {state['value']}")
-    return {"_next": [END], "value": state["value"], "word_to_guess": state["word_to_guess"], "guessed_word": state["guessed_word"]}
+    elif game_mode == "Word Clue Guesser":
+        if st.button("Start Word Clue Guesser"):
+            word_clue_guesser()
 
-def check_positive(state: GameState) -> GameState:
-    st.write(f"✔️ It's positive! Current value: {state['value']}")
-    return {"_next": [END], "value": state["value"], "word_to_guess": state["word_to_guess"], "guessed_word": state["guessed_word"]}
-
-def check_non_positive(state: GameState) -> GameState:
-    st.write(f"✔️ It's zero or negative! Current value: {state['value']}")
-    return {"_next": [END], "value": state["value"], "word_to_guess": state["word_to_guess"], "guessed_word": state["guessed_word"]}
-
-# 3. Word Guessing Game Logic
-def start_word_game(state: GameState) -> GameState:
-    word_list = ['apple', 'banana', 'cherry', 'date', 'elderberry']
-    word_to_guess = random.choice(word_list)  # Pick a random word from the list
-    st.write(f"Welcome to the Word Guessing Game! Try to guess the word.")
-    st.write(f"Word to guess: {word_to_guess}")  # Normally, this would be hidden
-    return {"_next": ["check_word_guess"], "value": state["value"], "word_to_guess": word_to_guess, "guessed_word": ""}
-
-def check_word_guess(state: GameState) -> GameState:
-    guessed_word = state["guessed_word"]
-    word_to_guess = state["word_to_guess"]
-
-    if guessed_word.lower() == word_to_guess.lower():
-        st.write(f"✔️ Correct! You've guessed the word: {guessed_word}")
-        return {"_next": [END], "value": state["value"], "word_to_guess": word_to_guess, "guessed_word": guessed_word}
-    else:
-        st.write(f"❌ Incorrect! Try again.")
-        return {"_next": ["check_word_guess"], "value": state["value"], "word_to_guess": word_to_guess, "guessed_word": ""}
-
-# 4. Create the graph
-builder = StateGraph(GameState)
-
-# Add nodes to the graph
-builder.add_node("start", start_node)
-builder.add_node("check_even", check_even)
-builder.add_node("check_odd", check_odd)
-builder.add_node("check_positive", check_positive)
-builder.add_node("check_non_positive", check_non_positive)
-builder.add_node("start_word_game", start_word_game)
-builder.add_node("check_word_guess", check_word_guess)
-
-# Set the entry point
-builder.set_entry_point("start")
-
-# Define edges to terminate the graph
-builder.add_edge("check_even", END)
-builder.add_edge("check_odd", END)
-builder.add_edge("check_positive", END)
-builder.add_edge("check_non_positive", END)
-builder.add_edge("check_word_guess", END)
-
-# Compile the graph
-graph = builder.compile()
-
-# 5. Streamlit UI
-st.title("LangGraph Game - Number and Word Guesser")
-st.write("This is a simple game where you can guess a number (even/odd/positive) and a word!")
-
-# Select the game mode (Number or Word Guessing)
-game_mode = st.radio("Choose a game mode", ["Number Guessing", "Word Guessing"])
-
-# Number Guessing Game Inputs
-if game_mode == "Number Guessing":
-    number = st.number_input("Enter a number", value=3)
-    initial_state = {"_next": ["start"], "value": number, "word_to_guess": "", "guessed_word": ""}
-
-# Word Guessing Game Inputs
-elif game_mode == "Word Guessing":
-    guessed_word = st.text_input("Enter your guess for the word:")
-    initial_state = {"_next": ["start_word_game"], "value": 0, "word_to_guess": "", "guessed_word": guessed_word}
-
-# Button to invoke the game
-if st.button("Run Game"):
-    st.write("Running LangGraph...")
-    graph.invoke(initial_state)
+# Display the Main Menu
+st.title("Welcome to the Game Hub")
+main_menu()
