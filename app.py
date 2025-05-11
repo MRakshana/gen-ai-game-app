@@ -47,9 +47,16 @@ def menu(state: GameState) -> GameState:
 # Number Guessing Game Agent
 # ----------------------------
 def number_game_agent(state: GameState) -> GameState:
-    min_val = state["number_guess_min"]
-    max_val = state["number_guess_max"]
+    min_val = state.get("number_guess_min", 1)
+    max_val = state.get("number_guess_max", 50)
+
+    state.setdefault("number_guess_min", min_val)
+    state.setdefault("number_guess_max", max_val)
+    state.setdefault("number_game_count", 0)
+    state.setdefault("session_games", [])
+
     mid = (min_val + max_val) // 2
+
 
     if min_val >= max_val:
         st.success(f"🎯 Your number is {min_val}! I guessed it!")
