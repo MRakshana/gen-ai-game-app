@@ -3,9 +3,9 @@ from langgraph.graph import StateGraph
 from typing import TypedDict
 from typing_extensions import Annotated
 
-# Define GameState TypedDict with Annotated to allow multiple next steps
+# Define GameState TypedDict with Annotated to handle multiple values for '_next'
 class GameState(TypedDict):
-    _next: Annotated[str, "multiple"]  # Allow multiple next steps here
+    _next: Annotated[str, "next_step"]  # Define '_next' as a single value key for each step
     number_guess_min: int
     number_guess_max: int
     number_game_count: int
@@ -91,7 +91,7 @@ def word_game_agent(state: GameState) -> GameState:
 
     return state
 
-# Graph creation
+# Graph creation with explicit next-step handling
 def create_game_graph():
     builder = StateGraph(GameState)
     builder.add_node("menu", menu)
