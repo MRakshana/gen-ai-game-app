@@ -135,13 +135,11 @@ def main():
     game_graph = create_game_graph()
 
     for updated_state in game_graph.stream(st.session_state.game_state):
-    if "_next" in updated_state and updated_state["_next"] == "menu":
+        if "_next" in updated_state and updated_state["_next"] == "menu":
         st.session_state.game_state = updated_state
         break
     st.session_state.game_state = updated_state
 
-
-    
 
 if __name__ == "__main__":
     main()
