@@ -64,9 +64,9 @@ def number_game_agent(state: GameState) -> GameState:
         state["session_games"].append("number")
         state["number_guess_min"] = 1
         state["number_guess_max"] = 50
-        state["_next"] = "menu"
+        state["_next"] = "menu"  # Transition back to the menu after guessing the number
     else:
-        state["_next"] = "start_number_game"
+        state["_next"] = "start_number_game"  # Keep the user in the number guessing game
 
     return state
 
@@ -81,12 +81,12 @@ def word_game_agent(state: GameState) -> GameState:
             st.success("Correct! 🎉")
             state["word_game_count"] += 1
             state["session_games"].append("word")
-            state["_next"] = "menu"
+            state["_next"] = "menu"  # Transition back to the menu after guessing the word
         else:
             st.warning("Try again!")
-            state["_next"] = "start_word_game"
+            state["_next"] = "start_word_game"  # Stay in word guessing game if incorrect
     else:
-        state["_next"] = "start_word_game"
+        state["_next"] = "start_word_game"  # Stay in word guessing game if no input
 
     return state
 
@@ -116,7 +116,7 @@ def main():
     # Process the game flow
     for updated_state in game_graph.stream(st.session_state.game_state):
         st.session_state.game_state = updated_state
-        # We ensure the state only returns to "menu" once we are done with the game
+        # Ensure the state transitions properly without conflicts
         if updated_state.get("_next") == "menu":
             break
 
