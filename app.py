@@ -20,7 +20,7 @@ def number_game_agent(state: GameState) -> GameState:
         guess = random.randint(1, 50)
     else:
         last_response = guesses[-1].lower()
-        prev_guess = int(messages[-2]["content"].split()[-1])
+        prev_guess = int([m["content"] for m in messages if m["type"] == "ai"][-1].split()[-1].replace("?", ""))
 
         if last_response == "greater":
             guess = min(50, prev_guess + 1)
@@ -42,13 +42,13 @@ def number_game_agent(state: GameState) -> GameState:
         key=f"guess_{guess}_{len(messages)}"
     )
 
+    messages.append({"type": "ai", "content": f"Is your number {guess}?"})
+    messages.append({"type": "user", "content": response})
+
     return {
         "game_type": "number",
         "step": "number_game",
-        "messages": [
-            {"type": "ai", "content": f"Is your number {guess}?"},
-            {"type": "user", "content": response}
-        ]
+        "messages": messages
     }
 
 # Word clue logic
@@ -65,7 +65,6 @@ def word_game_agent(state: GameState) -> GameState:
     if question:
         answer = "Maybe"
         target_word = st.session_state["word_choice"]
-        # Dummy logic for yes/no
         if any(word in target_word for word in question.lower().split()):
             answer = "Yes"
         elif random.random() > 0.5:
@@ -99,15 +98,29 @@ if "game_counter" not in st.session_state:
 if "state" not in st.session_state:
     st.session_state["state"] = "main"
 
+if "messages" not in st.session_state:
+    st.session_state["messages"] = []
+
 game_type = st.radio("Choose a game mode", ["Number Game", "Word Clue Guesser"])
 
 if st.button(f"Start {game_type}"):
     st.session_state["state"] = "number" if "Number" in game_type else "word"
+    st.session_state["messages"] = []
 
 if st.session_state["state"] == "number":
     st.write("Welcome to the Number Game!")
     st.write("Think of a number between 1 and 50, and I'll guess it.")
-    number_game_agent({"game_type": "number", "step": "start", "messages": []})
+
+    state = {
+        "game_type": "number",
+        "step": "number_game",
+        "messages": st.session_state.get("messages", [])
+    }
+
+    result = number_game_agent(state)
+
+    if result and "messages" in result:
+        st.session_state["messages"] = result["messages"]
 
 elif st.session_state["state"] == "word":
     st.write("Welcome to the Word Clue Guesser!")
