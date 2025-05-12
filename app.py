@@ -18,6 +18,8 @@ def initialize_game(_: NumberGameState) -> NumberGameState:
 
 # Node 2: Show guess and get user feedback
 def show_guess(state: NumberGameState) -> NumberGameState:
+    if state["done"]:
+        return state  # If done, return state without asking for feedback
     st.write(f"Is your number {state['current_guess']}?")
     feedback = st.radio(
         "Choose feedback:",
@@ -28,14 +30,13 @@ def show_guess(state: NumberGameState) -> NumberGameState:
 
 # Node 3: Update min/max bounds based on feedback
 def process_feedback(state: NumberGameState) -> NumberGameState:
-    guess = state["current_guess"]
     if state["feedback"] == "greater":
-        state["min_val"] = guess + 1
+        state["min_val"] = state["current_guess"] + 1
     elif state["feedback"] == "less":
-        state["max_val"] = guess - 1
+        state["max_val"] = state["current_guess"] - 1
     return state
 
-# Node 4: Compute next guess or finish
+# Node 4: Check win condition and stop if done
 def check_win(state: NumberGameState) -> NumberGameState:
     if state["feedback"] == "correct":
         state["done"] = True  # Mark game as done when feedback is 'correct'
@@ -43,7 +44,7 @@ def check_win(state: NumberGameState) -> NumberGameState:
         state["current_guess"] = (state["min_val"] + state["max_val"]) // 2
     return state
 
-# Node 5: End game
+# Node 5: End game and display success message
 def end_game(state: NumberGameState) -> NumberGameState:
     if state["done"]:
         st.success(f"🎉 I guessed your number: {state['current_guess']}!")
