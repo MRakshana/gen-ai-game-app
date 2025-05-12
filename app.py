@@ -2,94 +2,81 @@ import sys
 import streamlit as st
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, Optional
-import time
 
-# Optionally increase recursion limit
 sys.setrecursionlimit(1000)
 
-# Define game state structure
+# Game state structure
 class GameState(TypedDict):
     guess: Optional[str]
     correct_number: str
     message: Optional[str]
     end: bool
-    guess_count: int  # Counter for guess
+    guess_count: int
 
-# Game state functions
+# Game logic
 def start_game(state: GameState) -> GameState:
-    state["correct_number"] = "5"  # This can be randomized or modified as needed
+    state["correct_number"] = "5"  # Replace with random if desired
     state["message"] = "Guess a number between 1 and 10:"
     state["end"] = False
-    state["guess_count"] = 0  # Initialize the guess counter
+    state["guess_count"] = 0
     return state
 
 def check_guess(state: GameState) -> GameState:
     if state["guess"] == state["correct_number"]:
         state["message"] = "🎉 Correct! You win!"
-        state["end"] = True  # Set end to True when correct
+        state["end"] = True
     else:
         state["message"] = "❌ Incorrect. Try again!"
         state["end"] = False
-    state["guess_count"] += 1  # Increment the guess counter
+    state["guess_count"] += 1
     return state
 
-# Build graph for the game
 def build_graph():
     builder = StateGraph(GameState)
-    
     builder.add_node("start", start_game)
     builder.add_node("check", check_guess)
-    
     builder.set_entry_point("start")
-    
-    # Add edges without conditions
-    builder.add_edge("start", "check")  # Transition from start to check
-    builder.add_edge("check", "check")  # Loop from check to check (for retrying)
-    builder.add_edge("check", END)  # End the game if guessed correctly
-    
+    builder.add_edge("start", "check")
+    builder.add_edge("check", "check")
+    builder.add_edge("check", END)
     return builder.compile()
 
 graph = build_graph()
 
-# Function to run the game
+# Streamlit game runner
 def run_game():
-    # Initialize the state (as a dictionary)
-    state = {
-        "guess": None,
-        "correct_number": "5",
-        "message": "Guess a number between 1 and 10:",
-        "end": False,
-        "guess_count": 0
-    }
-    
-    # Run the graph
-    while not state["end"]:
-        # Display current message
-        st.write(state["message"])
-        
-        # Use state['guess_count'] and time.time() to generate a unique key
-        input_key = f"guess_input_{state['guess_count']}_{int(time.time() * 1000)}"
-        
-        # Input for the guess
-        guess = st.text_input(f"Enter your guess ({state['message']})", key=input_key)
-        
-        if guess:
-            state["guess"] = guess  # Set the guess
-            # Transition to the next state
-            state = graph.invoke(state)
-        
-        # Add a button to restart the game
-        if state["end"]:
-            if st.button("Restart"):
-                state = {
-                    "guess": None,
-                    "correct_number": "5",  # Reset the correct number
-                    "message": "Guess a number between 1 and 10:",
-                    "end": False,
-                    "guess_count": 0  # Reset the guess count
-                }
+    # Initialize session state
+    if "game_state" not in st.session_state:
+        st.session_state.game_state = {
+            "guess": None,
+            "correct_number": "5",
+            "message": "Guess a number between 1 and 10:",
+            "end": False,
+            "guess_count": 0
+        }
 
-# Run the game
+    state = st.session_state.game_state
+
+    st.write(state["message"])
+
+    # Use a stable input key
+    input_key = f"guess_input_{state['guess_count']}"
+
+    guess = st.text_input("Your guess:", key=input_key)
+
+    if guess:
+        state["guess"] = guess
+        new_state = graph.invoke(state)
+        st.session_state.game_state = new_state
+        st.experimental_rerun()
+
+    if state["end"]:
+        st.success(state["message"])
+        if st.button("Restart"):
+            st.session_state.game_state = start_game({})
+            st.experimental_rerun()
+
+# Run the Streamlit app
 if __name__ == "__main__":
     st.title("🎮 Gen AI Game App")
     st.header("Number Guessing Game (LangGraph Powered)")
