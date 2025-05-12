@@ -64,13 +64,14 @@ def build_number_game_graph():
     graph.add_edge("show_guess", "process_feedback")
     graph.add_edge("process_feedback", "check_win")
     graph.add_conditional_edges("check_win", lambda state: "end" if state["done"] else "show_guess")
-    graph.set_finish_point("end")
+    graph.set_finish_point("end")  # Explicitly set the finish point
 
     return graph.compile()
 
 # Streamlit UI
 st.title("🎮 Number Guessing Game (LangGraph Powered)")
 
+# Check if the state exists in session_state
 if "state" not in st.session_state:
     st.session_state["state"] = None
     st.session_state["runner"] = build_number_game_graph()
