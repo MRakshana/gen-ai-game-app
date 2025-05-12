@@ -5,37 +5,6 @@ from graph import build_graph
 
 # Initialize the graph
 graph = build_graph()
-def start_game(state):
-    state["correct_number"] = "5"  # fixed for simplicity
-    state["message"] = "Guess a number between 1 and 10:"
-    state["end"] = False  # Ensure the game starts without an end condition
-    return state
-
-def check_guess(state):
-    if state["guess"] == state["correct_number"]:
-        state["message"] = "🎉 Correct! You win!"
-        state["end"] = True
-    else:
-        state["message"] = f"❌ Incorrect. Try again!"
-        state["end"] = False
-    return state
-
-def build_graph():
-    builder = StateGraph(dict)  # Pass `dict` instead of `GameState`
-
-    builder.add_node("start", start_game)
-    builder.add_node("check", check_guess)
-
-    builder.set_entry_point("start")
-
-    # Connect nodes
-    builder.add_edge("start", "check")  # Start to check guess
-    builder.add_edge("check", "check", condition=lambda s: not s["end"])  # Keep checking if not ended
-    builder.add_edge("check", END, condition=lambda s: s["end"])  # End if the guess is correct
-
-    return builder.compile()
-
-# Run the game
 def run_game():
     # Initialize the state (as a dictionary)
     state = {
@@ -50,8 +19,8 @@ def run_game():
         # Display current message
         st.write(state["message"])
         
-        # Input for the guess with a unique key using a dynamic approach
-        guess = st.text_input("Enter your guess:", key=f"guess_input_{state['message']}")  # Unique key
+        # Use a dynamic key based on the message or other attributes to make it unique
+        guess = st.text_input(f"Enter your guess ({state['message']})", key=f"guess_input_{state['message']}_{state['end']}")
         
         if guess:
             state["guess"] = guess  # Set the guess
