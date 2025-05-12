@@ -22,21 +22,22 @@ def check_guess(state: GameState) -> GameState:
         state["message"] = "🎉 Correct! You win!"
         state["end"] = True
     else:
-        state["message"] = f"❌ Incorrect. Try again!"
+        state["message"] = "❌ Incorrect. Try again!"
         state["end"] = False
+    
+    # Add logic to handle conditional transitions here.
     return state
 
-# Build graph
 def build_graph():
     builder = StateGraph(GameState)
 
     builder.add_node("start", start_game)
     builder.add_node("check", check_guess)
-
+    
     builder.set_entry_point("start")
-
+    
     builder.add_edge("start", "check")  # Connect start to check
-    builder.add_edge("check", "check", condition=lambda s: not s["end"])  # Continue checking if game not ended
-    builder.add_edge("check", END, condition=lambda s: s["end"])  # End game if correct number guessed
+    builder.add_edge("check", "check")  # Transition back to check
+    builder.add_edge("check", END)  # End state
 
     return builder.compile()
