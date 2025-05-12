@@ -1,132 +1,111 @@
+import random
+import time
 import streamlit as st
-from typing import Literal, TypedDict
+from typing import Annotated, List, Literal, TypedDict
 from langgraph.graph import StateGraph
 from langgraph.graph.message import AnyMessage
-#from langgraph.graph.schema import add_messages
+from langgraph.prebuilt import ToolExecutor, tools_agent
 
-# --- Define GameState structure ---
+# Define your state
 class GameState(TypedDict):
-    messages: list[AnyMessage]
-    number_to_guess: int
-    word_list: list[str]
-    word_to_guess: str
-    _next: str
+    game_type: Literal["number", "word"]
+    step: str
+    messages: Annotated[List[AnyMessage], "merge"]
 
+# Number guessing logic
+def number_game_agent(state: GameState) -> GameState:
+    messages = state["messages"]
+    guesses = [m["content"] for m in messages if m["type"] == "user"]
+    if not guesses:
+        guess = random.randint(1, 50)
+    else:
+        last_response = guesses[-1].lower()
+        prev_guess = int(messages[-2]["content"].split()[-1])
+        if "greater" in last_response:
+            guess = min(50, prev_guess + 1)
+        elif "less" in last_response:
+            guess = max(1, prev_guess - 1)
+        else:
+            st.write(f"Congrats! I guessed your number {prev_guess}!")
+            st.session_state["game_counter"] += 1
+            st.session_state["state"] = "main"
+            return {"game_type": "number", "step": "done", "messages": []}
 
-# --- Helper Functions ---
-import random
-
-
-def init_game_state() -> GameState:
+    st.write(f"Is your number {guess}?")
+    response = st.radio("", ["greater", "less", "correct"], key=f"guess_{guess}")
     return {
-        "messages": [],
-        "number_to_guess": random.randint(1, 50),
-        "word_list": ["apple", "chair", "elephant", "guitar", "rocket", "pencil", "pizza", "tiger"],
-        "word_to_guess": random.choice(["apple", "chair", "elephant", "guitar", "rocket", "pencil", "pizza", "tiger"]),
-        "_next": "menu"
+        "game_type": "number",
+        "step": "number_game",
+        "messages": [
+            {"type": "ai", "content": f"Is your number {guess}?"},
+            {"type": "user", "content": response}
+        ]
     }
 
+# Word clue logic
+def word_game_agent(state: GameState) -> GameState:
+    words = ["apple", "chair", "elephant", "guitar", "rocket", "pencil", "pizza", "tiger"]
+    if "word_choice" not in st.session_state:
+        st.session_state["word_choice"] = random.choice(words)
+        st.session_state["word_guesses"] = []
 
-# --- Menu Node ---
-def menu(state: GameState) -> GameState:
-    st.title("🎮 Welcome to the Game Hub")
-    st.write("Choose a game mode")
-
-    game_mode = st.radio("Select a game:", ["Number Game", "Word Clue Guesser"])
-
-    if game_mode == "Number Game":
-        if st.button("Start Number Game"):
-            state["_next"] = "start_number_game"
-    elif game_mode == "Word Clue Guesser":
-        if st.button("Start Word Clue Guesser"):
-            state["_next"] = "start_word_game"
-
-    return state
-
-
-# --- Number Game Node ---
-def number_game(state: GameState) -> GameState:
-    st.subheader("Welcome to the Number Game!")
-    st.write("Think of a number between 1 and 50, and I'll guess it.")
-
-    if "guess" not in st.session_state:
-        st.session_state.guess = random.randint(1, 50)
-        st.session_state.attempts = 1
-
-    guess = st.session_state.guess
-    user_response = st.radio(f"Is your number {guess}?", ["greater", "less", "correct"], key=f"guess_{guess}")
-
-    if user_response == "greater":
-        st.session_state.guess += 1
-        st.session_state.attempts += 1
-    elif user_response == "less":
-        st.session_state.guess -= 1
-        st.session_state.attempts += 1
-    elif user_response == "correct":
-        st.success(f"Congrats! I guessed your number {guess} in {st.session_state.attempts} attempts.")
-        state["_next"] = "menu"
-        st.session_state.pop("guess", None)
-        st.session_state.pop("attempts", None)
-        return state
-
-    state["_next"] = "start_number_game"
-    return state
-
-
-# --- Word Game Node ---
-def word_game(state: GameState) -> GameState:
-    st.subheader("Welcome to the Word Clue Guesser!")
     st.write("Choose a word from the following list:")
-    st.json(state["word_list"])
+    st.json({i: w for i, w in enumerate(words)})
 
-    if "question" not in st.session_state:
-        st.session_state.question_idx = 0
-        st.session_state.questions = [
-            "Is it a vehicle?",
-            "Is it a living thing?",
-            "Is it something found indoors?",
-            "Is it edible?",
-            "Is it used for writing?"
-        ]
-        st.session_state.answers = []
+    question = st.text_input("Ask a yes/no question to guess the word:")
+    if question:
+        answer = "Maybe"
+        target_word = st.session_state["word_choice"]
+        # Dummy logic for yes/no
+        if any(word in target_word for word in question.lower().split()):
+            answer = "Yes"
+        elif random.random() > 0.5:
+            answer = "No"
+        st.session_state["word_guesses"].append((question, answer))
+        for q, a in st.session_state["word_guesses"]:
+            st.radio(q, ["Yes", "No", "Maybe"], index=["Yes", "No", "Maybe"].index(a))
 
-    if st.session_state.question_idx < len(st.session_state.questions):
-        question = st.session_state.questions[st.session_state.question_idx]
-        answer = st.radio(question, ["Yes", "No", "Maybe"], key=f"q_{st.session_state.question_idx}")
-        st.session_state.answers.append((question, answer))
-        if st.button("Next"):
-            st.session_state.question_idx += 1
-    else:
-        st.success("Thanks for answering! I'm guessing... 🤔")
-        st.write(f"My guess is: **{random.choice(state['word_list'])}**")
-        if st.button("Return to menu"):
-            st.session_state.clear()
-            state["_next"] = "menu"
-            return state
+    return {
+        "game_type": "word",
+        "step": "word_game",
+        "messages": [{"type": "user", "content": question}] if question else []
+    }
 
-    state["_next"] = "start_word_game"
-    return state
+def build_game_graph():
+    builder = StateGraph(GameState)
+    builder.add_node("number_game", number_game_agent)
+    builder.add_node("word_game", word_game_agent)
 
+    builder.set_entry_point("number_game")
+    builder.set_finish_point("word_game")
 
-# --- Build LangGraph ---
-builder = StateGraph(GameState)
-builder.set_entry_point("menu")
-builder.add_node("menu", menu)
-builder.add_node("start_number_game", number_game)
-builder.add_node("start_word_game", word_game)
+    return builder.compile()
 
-builder.add_edge("menu", "start_number_game")
-builder.add_edge("menu", "start_word_game")
-builder.add_edge("start_number_game", "start_number_game")
-builder.add_edge("start_number_game", "menu")
-builder.add_edge("start_word_game", "start_word_game")
-builder.add_edge("start_word_game", "menu")
+# Streamlit UI
+st.title("Welcome to the Game Hub")
 
-app_graph = builder.compile()
+if "game_counter" not in st.session_state:
+    st.session_state["game_counter"] = 0
 
+if "state" not in st.session_state:
+    st.session_state["state"] = "main"
 
-# --- Streamlit app entry point ---
-if "game_state" not in st.session_state:
-    st.session_state.game_state = init_game_state()
+game_type = st.radio("Choose a game mode", ["Number Game", "Word Clue Guesser"])
 
-st.session_state.game_state = app_graph.invoke(st.session_state.game_state)
+if st.button(f"Start {game_type}"):
+    st.session_state["state"] = "number" if "Number" in game_type else "word"
+
+if st.session_state["state"] == "number":
+    st.write("Welcome to the Number Game!")
+    st.write("Think of a number between 1 and 50, and I'll guess it.")
+    number_game_agent({"game_type": "number", "step": "start", "messages": []})
+
+elif st.session_state["state"] == "word":
+    st.write("Welcome to the Word Clue Guesser!")
+    word_game_agent({"game_type": "word", "step": "start", "messages": []})
+
+elif st.session_state["state"] == "main":
+    st.write(f"Number Game counter: {st.session_state['game_counter']}")
+    st.write("Returning to the main menu...")
+    time.sleep(2)
+    st.session_state["state"] = ""
