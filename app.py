@@ -1,97 +1,132 @@
 import streamlit as st
+from typing import Literal, TypedDict
+from langgraph.graph import StateGraph
+from langgraph.graph.message import AnyMessage
+from langgraph.graph.schema import add_messages
+
+# --- Define GameState structure ---
+class GameState(TypedDict):
+    messages: list[AnyMessage]
+    number_to_guess: int
+    word_list: list[str]
+    word_to_guess: str
+    _next: str
+
+
+# --- Helper Functions ---
 import random
 
-# Define the global counters
-number_game_counter = 0
-word_game_counter = 0
 
-# List of words for the Word Clue Guesser game
-word_list = ["apple", "chair", "elephant", "guitar", "rocket", "pencil", "pizza", "tiger"]
+def init_game_state() -> GameState:
+    return {
+        "messages": [],
+        "number_to_guess": random.randint(1, 50),
+        "word_list": ["apple", "chair", "elephant", "guitar", "rocket", "pencil", "pizza", "tiger"],
+        "word_to_guess": random.choice(["apple", "chair", "elephant", "guitar", "rocket", "pencil", "pizza", "tiger"]),
+        "_next": "menu"
+    }
 
-# 1. Number Game - Binary Search Logic
-def number_game():
-    global number_game_counter
-    st.write("Welcome to the Number Game!")
-    st.write("Think of a number between 1 and 50, and I'll guess it.")
-    
-    low, high = 1, 50
-    attempts = 0
-    guessed_number = None
-    
-    while guessed_number != "correct" and low <= high:
-        # Guessing number based on binary search
-        guess = (low + high) // 2
-        attempts += 1
-        guessed_number = st.radio(f"Is your number {guess}?", ["greater", "less", "correct"], key=f"number_game_{attempts}")
 
-        if guessed_number == "greater":
-            low = guess + 1
-        elif guessed_number == "less":
-            high = guess - 1
+# --- Menu Node ---
+def menu(state: GameState) -> GameState:
+    st.title("🎮 Welcome to the Game Hub")
+    st.write("Choose a game mode")
 
-    number_game_counter += 1
-    st.write(f"Congrats! I guessed your number {guess} in {attempts} attempts.")
-    st.write(f"Number Game counter: {number_game_counter}")
-    st.write("Returning to the main menu...")
-
-# 2. Word Clue Guesser Game
-def word_clue_guesser():
-    global word_game_counter
-    st.write("Welcome to the Word Clue Guesser!")
-    st.write("Choose a word from the following list:")
-    st.write(word_list)
-
-    word_to_guess = random.choice(word_list)
-    questions_asked = 0
-    max_questions = 5
-    correct_guess = False
-    user_input = ""
-
-    # Ask descriptive yes/no/maybe questions
-    while questions_asked < max_questions and not correct_guess:
-        question = f"Is it a {random.choice(['fruit', 'object', 'animal', 'food', 'vehicle'])}?"
-        answer = st.radio(question, ["Yes", "No", "Maybe"], key=f"word_game_question_{questions_asked}")
-
-        if answer == "Yes":
-            user_input = "Yes"
-        elif answer == "Maybe":
-            user_input = "Maybe"
-        else:
-            user_input = "No"
-        
-        # After asking questions, try to guess the word
-        if questions_asked == max_questions - 1:
-            guess = word_to_guess  # This is simple for now, can be improved
-            correct_guess = (guess.lower() == word_to_guess.lower())
-            break
-
-        questions_asked += 1
-
-    if correct_guess:
-        st.write(f"Success! I guessed the word: {word_to_guess}.")
-    else:
-        retry = st.radio("I couldn't guess the word. Would you like to try again?", ["Yes", "No"], key="retry")
-        if retry == "Yes":
-            word_clue_guesser()
-        else:
-            st.write("Returning to the main menu...")
-
-    word_game_counter += 1
-    st.write(f"Word Game counter: {word_game_counter}")
-    st.write("Returning to the main menu...")
-
-# Main Menu UI
-def main_menu():
-    game_mode = st.radio("Choose a game mode", ["Number Game", "Word Clue Guesser"], key="game_mode")
+    game_mode = st.radio("Select a game:", ["Number Game", "Word Clue Guesser"])
 
     if game_mode == "Number Game":
-        if st.button("Start Number Game", key="start_number_game"):
-            number_game()
-
+        if st.button("Start Number Game"):
+            state["_next"] = "start_number_game"
     elif game_mode == "Word Clue Guesser":
-        if st.button("Start Word Clue Guesser", key="start_word_game"):
-            word_clue_guesser()
+        if st.button("Start Word Clue Guesser"):
+            state["_next"] = "start_word_game"
 
-# Display the Main Menu
-st.title("Welcome to the Game Hub")
-main_menu()
+    return state
+
+
+# --- Number Game Node ---
+def number_game(state: GameState) -> GameState:
+    st.subheader("Welcome to the Number Game!")
+    st.write("Think of a number between 1 and 50, and I'll guess it.")
+
+    if "guess" not in st.session_state:
+        st.session_state.guess = random.randint(1, 50)
+        st.session_state.attempts = 1
+
+    guess = st.session_state.guess
+    user_response = st.radio(f"Is your number {guess}?", ["greater", "less", "correct"], key=f"guess_{guess}")
+
+    if user_response == "greater":
+        st.session_state.guess += 1
+        st.session_state.attempts += 1
+    elif user_response == "less":
+        st.session_state.guess -= 1
+        st.session_state.attempts += 1
+    elif user_response == "correct":
+        st.success(f"Congrats! I guessed your number {guess} in {st.session_state.attempts} attempts.")
+        state["_next"] = "menu"
+        st.session_state.pop("guess", None)
+        st.session_state.pop("attempts", None)
+        return state
+
+    state["_next"] = "start_number_game"
+    return state
+
+
+# --- Word Game Node ---
+def word_game(state: GameState) -> GameState:
+    st.subheader("Welcome to the Word Clue Guesser!")
+    st.write("Choose a word from the following list:")
+    st.json(state["word_list"])
+
+    if "question" not in st.session_state:
+        st.session_state.question_idx = 0
+        st.session_state.questions = [
+            "Is it a vehicle?",
+            "Is it a living thing?",
+            "Is it something found indoors?",
+            "Is it edible?",
+            "Is it used for writing?"
+        ]
+        st.session_state.answers = []
+
+    if st.session_state.question_idx < len(st.session_state.questions):
+        question = st.session_state.questions[st.session_state.question_idx]
+        answer = st.radio(question, ["Yes", "No", "Maybe"], key=f"q_{st.session_state.question_idx}")
+        st.session_state.answers.append((question, answer))
+        if st.button("Next"):
+            st.session_state.question_idx += 1
+    else:
+        st.success("Thanks for answering! I'm guessing... 🤔")
+        st.write(f"My guess is: **{random.choice(state['word_list'])}**")
+        if st.button("Return to menu"):
+            st.session_state.clear()
+            state["_next"] = "menu"
+            return state
+
+    state["_next"] = "start_word_game"
+    return state
+
+
+# --- Build LangGraph ---
+builder = StateGraph(GameState)
+builder.set_entry_point("menu")
+builder.add_node("menu", menu)
+builder.add_node("start_number_game", number_game)
+builder.add_node("start_word_game", word_game)
+
+builder.add_edge("menu", "start_number_game")
+builder.add_edge("menu", "start_word_game")
+builder.add_edge("start_number_game", "start_number_game")
+builder.add_edge("start_number_game", "menu")
+builder.add_edge("start_word_game", "start_word_game")
+builder.add_edge("start_word_game", "menu")
+
+app_graph = builder.compile()
+
+
+# --- Streamlit app entry point ---
+if "game_state" not in st.session_state:
+    st.session_state.game_state = init_game_state()
+
+st.session_state.game_state = app_graph.invoke(st.session_state.game_state)
