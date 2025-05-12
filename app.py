@@ -5,15 +5,13 @@ from graph import build_graph
 
 # Initialize the graph
 graph = build_graph()
-
-# Function to run the game
-def start_game(state: GameState) -> GameState:
+def start_game(state):
     state["correct_number"] = "5"  # fixed for simplicity
     state["message"] = "Guess a number between 1 and 10:"
     state["end"] = False  # Ensure the game starts without an end condition
     return state
 
-def check_guess(state: GameState) -> GameState:
+def check_guess(state):
     if state["guess"] == state["correct_number"]:
         state["message"] = "🎉 Correct! You win!"
         state["end"] = True
@@ -23,7 +21,7 @@ def check_guess(state: GameState) -> GameState:
     return state
 
 def build_graph():
-    builder = StateGraph(GameState)
+    builder = StateGraph(dict)  # Pass `dict` instead of `GameState`
 
     builder.add_node("start", start_game)
     builder.add_node("check", check_guess)
@@ -39,7 +37,7 @@ def build_graph():
 
 # Run the game
 def run_game():
-    # Initialize the state
+    # Initialize the state (as a dictionary)
     state = {
         "guess": None,
         "correct_number": "5",  # This can be randomized or modified as needed
