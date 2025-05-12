@@ -62,8 +62,11 @@ def run_game():
         # Display current message
         st.write(state["message"])
         
+        # Generate a unique key for each input box
+        input_key = f"guess_input_{state['message']}_{state['end']}_{state['guess'] or 'no_guess'}"
+        
         # Input for the guess
-        guess = st.text_input(f"Enter your guess ({state['message']})", key=f"guess_input_{state['message']}_{state['end']}")
+        guess = st.text_input(f"Enter your guess ({state['message']})", key=input_key)
         
         if guess:
             state["guess"] = guess  # Set the guess
