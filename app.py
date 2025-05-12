@@ -64,6 +64,7 @@ def build_number_game_graph():
     graph.add_edge("initialize", "show_guess")
     graph.add_edge("show_guess", "process_feedback")
     graph.add_edge("process_feedback", "check_win")
+    # Conditional edges to ensure the flow stops at 'end' if game is done
     graph.add_conditional_edges("check_win", lambda state: "end" if state["done"] else "show_guess")
     graph.set_finish_point("end")  # Explicitly set the finish point
 
@@ -104,3 +105,4 @@ def visualize_graph():
 
 with st.expander("🧠 View LangGraph Execution Flow"):
     st.graphviz_chart(visualize_graph())
+
