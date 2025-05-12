@@ -67,8 +67,8 @@ def run_game():
         # Display current message
         st.write(state["message"])
         
-        # Generate a unique key based on guess_count and guess (unique for each attempt)
-        input_key = f"guess_input_{state['guess_count']}_{state['guess']}_{time.time()}"
+        # Use state['guess_count'] to generate a unique key
+        input_key = f"guess_input_{state['guess_count']}_{time.time()}"
         
         # Input for the guess
         guess = st.text_input(f"Enter your guess ({state['message']})", key=input_key)
@@ -94,3 +94,5 @@ if __name__ == "__main__":
     st.title("🎮 Gen AI Game App")
     st.header("Number Guessing Game (LangGraph Powered)")
     run_game()
+
+
