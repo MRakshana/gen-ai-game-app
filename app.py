@@ -78,3 +78,25 @@ if st.button("Start Game"):
 
 if st.session_state["state"]:
     st.session_state["state"] = st.session_state["runner"].invoke(st.session_state["state"])
+
+import graphviz
+
+def visualize_graph():
+    dot = graphviz.Digraph()
+    dot.node("initialize")
+    dot.node("show_guess")
+    dot.node("process_feedback")
+    dot.node("check_win")
+    dot.node("end")
+
+    dot.edge("initialize", "show_guess")
+    dot.edge("show_guess", "process_feedback")
+    dot.edge("process_feedback", "check_win")
+    dot.edge("check_win", "show_guess", label="not done")
+    dot.edge("check_win", "end", label="done")
+
+    return dot
+
+with st.expander("🧠 View LangGraph Execution Flow"):
+    st.graphviz_chart(visualize_graph())
+
