@@ -78,7 +78,12 @@ if st.session_state.state:
             st.session_state.state = None
     else:
         st.write(f"Is your number {state['current_guess']}?")
-        feedback = st.radio("Choose feedback:", ["greater", "less", "correct"], key=f"feedback_{state['current_guess']}")
+
+        # Generate a unique key by including the guess and session id
+        unique_key = f"feedback_{state['current_guess']}_{st.session_state.get('game_id', 0)}"
+        
+        feedback = st.radio("Choose feedback:", ["greater", "less", "correct"], key=unique_key)
+        
         if st.button("Submit Response"):
             state["feedback"] = feedback
             st.session_state.state = st.session_state.runner.invoke(state)
@@ -104,4 +109,3 @@ def visualize_graph():
 
 with st.expander("🧠 View LangGraph Execution Flow"):
     st.graphviz_chart(visualize_graph())
-
