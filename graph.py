@@ -41,7 +41,7 @@
     "    builder.set_entry_point(\"start\")\n",
     "\n",
     "    builder.add_edge(\"start\", \"check\")\n",
-    "   builder.add_edge("check", END
+    "   builder.add_edge("check", END)
     "    )\n",
     "\n",
     "    return builder.compile()\n"
