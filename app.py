@@ -1,8 +1,8 @@
-# app.py
 import sys
 import streamlit as st
 from langgraph.graph import StateGraph, END
-from typing import TypedDict, Optional
+from typing import TypedDict, Optional  # Import necessary types
+
 # Optionally increase recursion limit
 sys.setrecursionlimit(1000)
 
@@ -23,7 +23,7 @@ def start_game(state: GameState) -> GameState:
 def check_guess(state: GameState) -> GameState:
     if state["guess"] == state["correct_number"]:
         state["message"] = "🎉 Correct! You win!"
-        state["end"] = True  # Ensure this ends the game
+        state["end"] = True  # Set end to True when correct
     else:
         state["message"] = "❌ Incorrect. Try again!"
         state["end"] = False
@@ -37,9 +37,11 @@ def build_graph():
     builder.add_node("check", check_guess)
     
     builder.set_entry_point("start")
-    builder.add_edge("start", "check")
-    builder.add_edge("check", "check", condition=lambda s: not s["end"])  # Loop back if not ended
-    builder.add_edge("check", END, condition=lambda s: s["end"])  # End game if guessed correctly
+    
+    # Add edges without conditions
+    builder.add_edge("start", "check")  # Transition from start to check
+    builder.add_edge("check", "check")  # Loop from check to check (for retrying)
+    builder.add_edge("check", END)  # End the game if guessed correctly
     
     return builder.compile()
 
