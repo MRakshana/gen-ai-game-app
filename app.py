@@ -21,8 +21,8 @@ def run_game():
         # Display current message
         st.write(state["message"])
         
-        # Input for the guess
-        guess = st.text_input("Enter your guess:", key="guess_input")
+        # Input for the guess with a unique key using a dynamic approach
+        guess = st.text_input("Enter your guess:", key=f"guess_input_{state['message']}")  # Unique key
         
         if guess:
             state["guess"] = guess  # Set the guess
