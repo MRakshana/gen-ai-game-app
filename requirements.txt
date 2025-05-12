@@ -3,3 +3,7 @@ openai
 langchain
 langgraph
 python-dotenv
+Pillow
+networkx
+matplotlib
+graphviz

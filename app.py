@@ -15,6 +15,7 @@ if "graph" not in st.session_state:
     st.session_state.state = st.session_state.graph.invoke(st.session_state.state)
 
 st.write(st.session_state.state["message"])
+<<<<<<< HEAD
 
 if not st.session_state.state.get("end", False):
     guess = st.text_input("Enter your guess:")
@@ -28,4 +29,14 @@ else:
 
 
 
+=======
+>>>>>>> 2323a7c45b13ff5176d0768ea04fac723ddb864e
 
+if not st.session_state.state.get("end", False):
+    guess = st.text_input("Enter your guess:")
+    if st.button("Submit Guess"):
+        st.session_state.state["guess"] = guess
+        st.session_state.state = st.session_state.graph.invoke(st.session_state.state)
+        st.rerun()
+else:
+    st.success("Game over!")

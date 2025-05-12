@@ -1,15 +1,7 @@
 {
   "build": {
     "env": {
-      "PYTHON_VERSION": "3.9"
+      "PYTHON_VERSION": "3.10"
     }
-  },
-  "runtime": "python3.9",
-  "handler": "app.py",
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/"
-    }
-  ]
+  }
 }
