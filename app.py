@@ -51,7 +51,7 @@ def end_game(state: NumberGameState) -> NumberGameState:
 
 # Build LangGraph with recursion limit
 def build_number_game_graph():
-    graph = StateGraph(NumberGameState, recursion_limit=50)  # Increase recursion limit
+    graph = StateGraph(NumberGameState, recursion_limit=100)  # Increase recursion limit
 
     graph.add_node("initialize", initialize_game)
     graph.add_node("show_guess", show_guess)
@@ -102,3 +102,4 @@ def visualize_graph():
 
 with st.expander("🧠 View LangGraph Execution Flow"):
     st.graphviz_chart(visualize_graph())
+
