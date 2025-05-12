@@ -41,9 +41,7 @@
     "    builder.set_entry_point(\"start\")\n",
     "\n",
     "    builder.add_edge(\"start\", \"check\")\n",
-    "    builder.add_conditional_edges(\n",
-    "        \"check\",\n",
-    "        condition=lambda s: END if s[\"end\"] else \"check\"\n",
+    "   builder.add_edge("check", END
     "    )\n",
     "\n",
     "    return builder.compile()\n"
