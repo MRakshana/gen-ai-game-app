@@ -68,8 +68,9 @@ def run_game():
         # Display current message
         st.write(state["message"])
         
-        # Generate a unique key based on guess_count, state message, and random component
-        input_key = f"guess_input_{state['guess_count']}_{state['message']}_{random.randint(1, 10000)}"
+        # Generate a unique key based on guess_count, state message, and current timestamp
+        unique_timestamp = str(int(time.time() * 1000))  # Create unique key with timestamp
+        input_key = f"guess_input_{state['guess_count']}_{state['message']}_{unique_timestamp}"
         
         # Input for the guess
         guess = st.text_input(f"Enter your guess ({state['message']})", key=input_key)
