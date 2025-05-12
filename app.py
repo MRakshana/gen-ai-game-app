@@ -2,6 +2,7 @@ import sys
 import streamlit as st
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, Optional  # Import necessary types
+import time  # For generating a unique timestamp
 
 # Optionally increase recursion limit
 sys.setrecursionlimit(1000)
@@ -12,12 +13,14 @@ class GameState(TypedDict):
     correct_number: str
     message: Optional[str]
     end: bool
+    guess_count: int  # Add a counter to differentiate guesses
 
 # Game state functions
 def start_game(state: GameState) -> GameState:
     state["correct_number"] = "5"  # This can be randomized or modified as needed
     state["message"] = "Guess a number between 1 and 10:"
     state["end"] = False
+    state["guess_count"] = 0  # Initialize the guess counter
     return state
 
 def check_guess(state: GameState) -> GameState:
@@ -27,6 +30,7 @@ def check_guess(state: GameState) -> GameState:
     else:
         state["message"] = "❌ Incorrect. Try again!"
         state["end"] = False
+    state["guess_count"] += 1  # Increment the guess counter
     return state
 
 # Build graph for the game
@@ -54,7 +58,8 @@ def run_game():
         "guess": None,
         "correct_number": "5",
         "message": "Guess a number between 1 and 10:",
-        "end": False
+        "end": False,
+        "guess_count": 0
     }
     
     # Run the graph
@@ -62,8 +67,8 @@ def run_game():
         # Display current message
         st.write(state["message"])
         
-        # Generate a unique key for each input box
-        input_key = f"guess_input_{state['message']}_{state['end']}_{state['guess'] or 'no_guess'}"
+        # Generate a unique key using the guess count (timestamp + guess count)
+        input_key = f"guess_input_{state['message']}_{state['end']}_{state['guess_count']}_{int(time.time())}"
         
         # Input for the guess
         guess = st.text_input(f"Enter your guess ({state['message']})", key=input_key)
@@ -80,7 +85,8 @@ def run_game():
                     "guess": None,
                     "correct_number": "5",  # Reset the correct number
                     "message": "Guess a number between 1 and 10:",
-                    "end": False
+                    "end": False,
+                    "guess_count": 0  # Reset the guess count
                 }
 
 # Run the game
