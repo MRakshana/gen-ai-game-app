@@ -6,3 +6,4 @@ python-dotenv
 Pillow
 networkx
 matplotlib
+graphviz
