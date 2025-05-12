@@ -4,6 +4,7 @@ import streamlit as st
 from typing import Annotated, List, Literal, TypedDict
 from langgraph.graph import StateGraph
 from langgraph.graph.message import AnyMessage
+import uuid
 
 # Define your state
 class GameState(TypedDict):
@@ -44,7 +45,7 @@ def number_game_agent(state: GameState) -> GameState:
     response = st.radio(
         f"Is your number {guess}?",  # Make the key unique by including the guess in the label
         ["greater", "less", "correct"],
-        key=f"guess_{guess}_{len(messages)}"  # Make the key unique by appending the message length
+        key=f"guess_{guess}_{len(messages)}_{str(uuid.uuid4())}"  # Unique key using uuid
     )
 
     # Append the AI's guess and user's response to messages
@@ -77,7 +78,7 @@ def word_game_agent(state: GameState) -> GameState:
             answer = "No"
         st.session_state["word_guesses"].append((question, answer))
         for q, a in st.session_state["word_guesses"]:
-            st.radio(q, ["Yes", "No", "Maybe"], index=["Yes", "No", "Maybe"].index(a))
+            st.radio(q, ["Yes", "No", "Maybe"], index=["Yes", "No", "Maybe"].index(a), key=f"word_{uuid.uuid4()}")
 
     return {
         "game_type": "word",
