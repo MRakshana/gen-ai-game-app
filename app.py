@@ -32,7 +32,7 @@ def number_game_agent(state: GameState) -> GameState:
             # End game when correct answer is given
             st.success(f"🎉 Congrats! I guessed your number {prev_guess}!")
             st.session_state["game_counter"] += 1
-            st.session_state["state"] = "main"
+            st.session_state["state"] = "main"  # Reset to main menu
             return {"game_type": "number", "step": "done", "messages": []}
         else:
             # Handle invalid response
