@@ -14,6 +14,7 @@ class GameState(TypedDict):
 def start_game(state: GameState) -> GameState:
     state["correct_number"] = "5"  # fixed for simplicity
     state["message"] = "Guess a number between 1 and 10:"
+    state["end"] = False  # Ensure the game doesn't end at the start
     return state
 
 def check_guess(state: GameState) -> GameState:
@@ -34,9 +35,8 @@ def build_graph():
 
     builder.set_entry_point("start")
 
-    builder.add_edge("start", "check")
-
-    # Add conditional edges
-    builder.add_edge("check", END, condition=lambda s: s["end"])
+    builder.add_edge("start", "check")  # Connect start to check
+    builder.add_edge("check", "check", condition=lambda s: not s["end"])  # Continue checking if game not ended
+    builder.add_edge("check", END, condition=lambda s: s["end"])  # End game if correct number guessed
 
     return builder.compile()
