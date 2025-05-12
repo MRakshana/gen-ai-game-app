@@ -17,8 +17,10 @@ def number_game_agent(state: GameState) -> GameState:
     guesses = [m["content"] for m in messages if m["type"] == "user"]
 
     if not guesses:
+        # First guess
         guess = random.randint(1, 50)
     else:
+        # Process the last user response and guess
         last_response = guesses[-1].lower()
         prev_guess = int([m["content"] for m in messages if m["type"] == "ai"][-1].split()[-1].replace("?", ""))
 
@@ -27,14 +29,17 @@ def number_game_agent(state: GameState) -> GameState:
         elif last_response == "less":
             guess = max(1, prev_guess - 1)
         elif last_response == "correct":
+            # End game when correct answer is given
             st.success(f"🎉 Congrats! I guessed your number {prev_guess}!")
             st.session_state["game_counter"] += 1
             st.session_state["state"] = "main"
             return {"game_type": "number", "step": "done", "messages": []}
         else:
+            # Handle invalid response
             st.warning("Please provide a valid response.")
             return state
 
+    # Ask the user if the guess is correct
     st.write(f"Is your number {guess}?")
     response = st.radio(
         "Select if the guess is correct",
@@ -42,6 +47,7 @@ def number_game_agent(state: GameState) -> GameState:
         key=f"guess_{guess}_{len(messages)}"
     )
 
+    # Append the AI's guess and user's response to messages
     messages.append({"type": "ai", "content": f"Is your number {guess}?"})
     messages.append({"type": "user", "content": response})
 
