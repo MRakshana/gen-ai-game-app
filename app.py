@@ -1,42 +1,46 @@
+# app.py
+
 import streamlit as st
 from graph import build_graph
 
-st.set_page_config(page_title="Gen AI Game App")
-st.title("🎮 Gen AI Game App")
+# Initialize the graph
+graph = build_graph()
 
-if "graph" not in st.session_state:
-    st.session_state.graph = build_graph()
-    st.session_state.state = {
-        "correct_number": "",
-        "guess": "",
-        "message": "",
-        "end": False,
+# Function to run the game
+def run_game():
+    # Initialize the state
+    state = {
+        "guess": None,
+        "correct_number": "5",  # This can be randomized or modified as needed
+        "message": "Guess a number between 1 and 10:",
+        "end": False
     }
-    st.session_state.state = st.session_state.graph.invoke(st.session_state.state)
+    
+    # Run the graph
+    while not state["end"]:
+        # Display current message
+        st.write(state["message"])
+        
+        # Input for the guess
+        guess = st.text_input("Enter your guess:", key="guess_input")
+        
+        if guess:
+            state["guess"] = guess  # Set the guess
+            # Transition to the next state
+            state = graph.invoke(state)
+        
+        # Add a button to restart the game
+        if state["end"]:
+            if st.button("Restart"):
+                state = {
+                    "guess": None,
+                    "correct_number": "5",  # Reset the correct number
+                    "message": "Guess a number between 1 and 10:",
+                    "end": False
+                }
 
-st.write(st.session_state.state["message"])
-<<<<<<< HEAD
-
-if not st.session_state.state.get("end", False):
-    guess = st.text_input("Enter your guess:")
-    if st.button("Submit Guess"):
-        st.session_state.state["guess"] = guess
-        st.session_state.state = st.session_state.graph.invoke(st.session_state.state)
-        st.rerun()
-else:
-    st.success("Game over!")
-
-
-
-
-=======
->>>>>>> 2323a7c45b13ff5176d0768ea04fac723ddb864e
-
-if not st.session_state.state.get("end", False):
-    guess = st.text_input("Enter your guess:")
-    if st.button("Submit Guess"):
-        st.session_state.state["guess"] = guess
-        st.session_state.state = st.session_state.graph.invoke(st.session_state.state)
-        st.rerun()
-else:
-    st.success("Game over!")
+# Run the game
+if __name__ == "__main__":
+    st.title("🎮 Gen AI Game App")
+    st.header("Number Guessing Game (LangGraph Powered)")
+    run_game()
