@@ -3,7 +3,6 @@ import streamlit as st
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, Optional
 import time
-import random
 
 # Optionally increase recursion limit
 sys.setrecursionlimit(1000)
@@ -68,9 +67,8 @@ def run_game():
         # Display current message
         st.write(state["message"])
         
-        # Generate a unique key based on guess_count, state message, and current timestamp
-        unique_timestamp = str(int(time.time() * 1000))  # Create unique key with timestamp
-        input_key = f"guess_input_{state['guess_count']}_{state['message']}_{unique_timestamp}"
+        # Generate a unique key based on guess_count and guess (unique for each attempt)
+        input_key = f"guess_input_{state['guess_count']}_{state['guess']}_{time.time()}"
         
         # Input for the guess
         guess = st.text_input(f"Enter your guess ({state['message']})", key=input_key)
