@@ -4,7 +4,6 @@ import streamlit as st
 from typing import Annotated, List, Literal, TypedDict
 from langgraph.graph import StateGraph
 from langgraph.graph.message import AnyMessage
-#from langgraph.prebuilt import ToolExecutor, tools_agent
 
 # Define your state
 class GameState(TypedDict):
@@ -16,23 +15,33 @@ class GameState(TypedDict):
 def number_game_agent(state: GameState) -> GameState:
     messages = state["messages"]
     guesses = [m["content"] for m in messages if m["type"] == "user"]
+
     if not guesses:
         guess = random.randint(1, 50)
     else:
         last_response = guesses[-1].lower()
         prev_guess = int(messages[-2]["content"].split()[-1])
-        if "greater" in last_response:
+
+        if last_response == "greater":
             guess = min(50, prev_guess + 1)
-        elif "less" in last_response:
+        elif last_response == "less":
             guess = max(1, prev_guess - 1)
-        else:
-            st.write(f"Congrats! I guessed your number {prev_guess}!")
+        elif last_response == "correct":
+            st.success(f"🎉 Congrats! I guessed your number {prev_guess}!")
             st.session_state["game_counter"] += 1
             st.session_state["state"] = "main"
             return {"game_type": "number", "step": "done", "messages": []}
+        else:
+            st.warning("Please provide a valid response.")
+            return state
 
     st.write(f"Is your number {guess}?")
-    response = st.radio("", ["greater", "less", "correct"], key=f"guess_{guess}")
+    response = st.radio(
+        "Select if the guess is correct",
+        ["greater", "less", "correct"],
+        key=f"guess_{guess}_{len(messages)}"
+    )
+
     return {
         "game_type": "number",
         "step": "number_game",
