@@ -42,9 +42,9 @@ def number_game_agent(state: GameState) -> GameState:
     # Ask the user if the guess is correct
     st.write(f"Is your number {guess}?")
     response = st.radio(
-        "Select if the guess is correct",
+        f"Is your number {guess}?",  # Make the key unique by including the guess in the label
         ["greater", "less", "correct"],
-        key=f"guess_{guess}_{len(messages)}"
+        key=f"guess_{guess}"  # Use the guess value as part of the key to ensure uniqueness
     )
 
     # Append the AI's guess and user's response to messages
